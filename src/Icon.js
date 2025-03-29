@@ -14,7 +14,8 @@ function Icon() {
 
   return (
     <div className="icon-container">
-      <img src="/craft.webp" alt="Test Icon" className="icon-img" />
+     <img src={`${process.env.PUBLIC_URL}/craft.webp`} alt="Test Icon" className="icon-img" />
+
       <h1>Carrer<span style={{color:'#E74C3C', fontSize:'17px'}}>crafter</span></h1>
     </div>
   );
