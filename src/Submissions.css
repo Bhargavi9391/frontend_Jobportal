@@ -1,0 +1,52 @@
+.submissions-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .application-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  a {
+    color: #0073b1;
+    text-decoration: none;
+  }
+  .back-icon {
+    font-size: 24px;
+    cursor: pointer;
+   
+    color: #333;
+  
+  }
+  
+  .back-icon:hover {
+    color: #0073b1;
+  }
+  .delete-icon {
+    color: red;
+    font-size: 18px;
+    cursor: pointer;
+    float: right; 
+    margin-top: 10px;
+  }
+  
+  .application-card {
+    position: relative;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  

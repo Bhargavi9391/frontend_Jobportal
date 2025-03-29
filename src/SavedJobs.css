@@ -1,0 +1,82 @@
+
+.saved-jobs-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  text-align: center;
+ 
+  padding: 20px;
+}
+
+
+.title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+
+.job-list1 {
+  display: flex;
+  flex-direction: column;
+ 
+  width: 100%;
+  max-width: 500px; 
+}
+
+
+.job-card {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+
+
+.remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-left: 150px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: 0.3s;
+  width: 100%;
+  max-width: 200px;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
+}
+
+
+.no-jobs {
+  font-size: 18px;
+  color: #666;
+}
+
+
+.back-btn {
+  margin-top: 20px;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  background-color: #2980b9;
+  color: white;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+}
+
+.back-btn:hover {
+  background-color: #21618c;
+}

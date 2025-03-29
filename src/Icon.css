@@ -1,0 +1,43 @@
+.icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.icon-img {
+    width: 30%;
+    height: 60%;
+    object-fit: cover;
+    animation: fadeIn 1s ease-in-out;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #00bcd4;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    animation: glowText 2s infinite alternate ease-in-out, bounceText 1.5s ease-in-out, sparkleText 1.5s infinite linear;
+}
+
+
+
+@keyframes bounceText {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+
+

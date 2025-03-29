@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Icon from "./Icon";
+import Login from "./Login";
+import Home from "./Home";
+import Admin from "./Admin";
+import Companies from "./Companies";
+import SavedJobs from "./SavedJobs";
+import Apply from "./Apply";
+import Submissions from "./Submissions";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Icon />,
+  },
+ 
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/home",
+    element: <Home />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
+  },
+  {
+    path: "/companies",
+    element: <Companies />,
+  },
+  {
+    path: "/savedjobs",
+    element: <SavedJobs />,
+  },
+  {
+    path: "/apply",
+    element: <Apply />,
+  },
+  {
+    path: "/submissions",
+    element: <Submissions />,
+  }
+]);
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const isAuthenticated = localStorage.getItem("authenticatedUser");
+
+  return <RouterProvider router={router} />;
 }
 
 export default App;

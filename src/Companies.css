@@ -1,0 +1,103 @@
+
+.companies-container {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    min-height: 100vh;
+  }
+  
+
+  .title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #181717;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  
+  .companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 25px;
+    justify-content: center;
+    padding: 10px;
+  }
+  
+ 
+  .company-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  
+  .company-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+
+  .company-logo {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 12px;
+    transition: transform 0.3s ease;
+  }
+  
+  
+  .company-card:hover .company-logo {
+    transform: scale(1.1) rotate(5deg);
+  }
+  
+  
+  .company-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #222;
+  }
+  
+  
+  .rating {
+    font-size: 20px;
+    color: gold;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+  
+  
+  .reviews {
+    font-size: 14px;
+    color: #555;
+  }
+ 
+  @media (max-width: 768px) {
+    .companies-grid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+  
+    .company-card {
+      padding: 15px;
+    }
+  
+    .company-logo {
+      width: 70px;
+      height: 70px;
+    }
+  
+    .title {
+      font-size: 24px;
+    }
+  }
+  
