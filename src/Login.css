@@ -54,7 +54,7 @@ input {
     border: 1px solid #bbb;
     border-radius: 8px;
     outline: none;
-    font-size: 14px;
+    font-size: 16px;
     transition: 0.3s;
     background: rgba(255, 255, 255, 0.7);
 }
@@ -176,4 +176,5 @@ p:hover {
     color: #e74c3c;
     font-size: 17px;
   }
+  
   

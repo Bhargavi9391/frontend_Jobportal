@@ -1,0 +1,48 @@
+.select-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+  
+  .result-card {
+    background: #f9f9f9;
+    border-left: 6px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  }
+  
+  .selected {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .unfit {
+    color: red;
+    font-weight: bold;
+  }
+  .back-icon {
+    font-size: 24px;
+    cursor: pointer;
+   
+    color: #333;
+  
+  }
+  
+  .back-icon:hover {
+    color: #0073b1;
+  }
+  .back-icon2 {
+    font-size: 24px;
+    cursor: pointer;
+   margin-left: 750px;
+    color: #333;
+  
+  }
+  
+  .back-icon2:hover {
+    color: #0073b1;
+  }
+
+  

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import "./Submissions.css";
 
+
 export default function Submissions() {
   const [applications, setApplications] = useState([]);
   const navigate = useNavigate(); 
@@ -34,6 +35,7 @@ export default function Submissions() {
             <div key={index} className="application-card">
               <h3>{app.jobTitle} at {app.company}</h3>
               <p><strong>Name:</strong> {app.firstName} {app.lastName}</p>
+              <p><strong>Skills:</strong> {app.skills?.length > 0 ? app.skills.join(", ") : "Not Provided"}</p>
               <p><strong>Graduation Year:</strong> {app.graduationYear}</p>
               <p><strong>CGPA:</strong> {app.cgpa}</p>
               <p><strong>LinkedIn:</strong> <a href={app.linkedin} target="_blank" rel="noopener noreferrer">View Profile</a></p>

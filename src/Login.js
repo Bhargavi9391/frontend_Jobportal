@@ -1,6 +1,8 @@
 import React, {useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "./ThemeContext";
 import "./Login.css";
+import axios from "axios";
 
 function Login() {
   const [isLogin, setIsLogin] = useState(false);
@@ -16,6 +18,8 @@ function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { darkMode, toggleTheme } = useTheme();
+  const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
 
   const conditions = [
@@ -29,50 +33,83 @@ function Login() {
   const adminEmail = "admin@gmail.com";
   const adminPassword = "Admin@123";
 
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/user-count");
+      setUserCount(response.data.count); 
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const validateRegister = () => {
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-
+   
+    setError("");
+  
     if (!email || !name || !password || !confirmPassword) {
       setError("⚠️ All fields are required!");
       return;
     }
-    if (registeredUsers.some((user) => user.email === email)) {
-      setError("👤Email already exists!");
+  
+   
+    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+  
+    const userExists = registeredUsers.some((user) => user.email === email);
+    if (userExists) {
+      setError("🚫 Email is already registered. Please login.");
       return;
     }
-
-    if (!email.endsWith("@gmail.com")) {
-      setError("🤷‍♂️Email must end with @gmail.com");
+  
+    if (!email.includes("@")) {
+      setError("🤷‍♂️ Invalid email format!");
       return;
     }
-
+  
     if (!conditions.every(({ regex }) => regex.test(password))) {
       setError("Password must meet all requirements");
       return;
     }
-
+  
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-   
-    registeredUsers.push({ email, password });
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-
-    setError("");
-    alert("🙂Registration Successful!");
-    setEmail("");
-    setPassword("");
-    setName("");
-    setConfirmPassword("");
-    setIsLogin(true);
-    localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
-
-
-
+  
+    // Send data to backend
+    fetch("https://job-portal-server-1.onrender.com/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+      }),
+    })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("Failed to register");
+      })
+      .then((data) => {
+        alert("🙂 Registration Successful!");
+        setEmail("");
+        setPassword("");
+        setName("");
+        setConfirmPassword("");
+        setIsLogin(true);
+        localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
+  
+        // Save the new user to localStorage
+        registeredUsers.push({ name, email, password });
+        localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+      })
+      .catch((err) => {
+        setError("🚫 Registration failed. Try again later.");
+        console.error(err);
+      });
   };
-
-  const validateLogin = () => {
+  
+  const validateLogin = async () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
   
     if (!email || !password) {
@@ -80,13 +117,7 @@ function Login() {
       return;
     }
   
-    const user = registeredUsers.find((user) => user.email === email);
-  
-    if (user) {
-      localStorage.setItem("authenticatedUser", JSON.stringify({ name: user.name, email: user.email }));
-    }
-  
-    
+    // Check for admin credentials first
     if (email === adminEmail && password === adminPassword) {
       alert("👑 Welcome, Admin!");
       setIsAdmin(true);
@@ -99,33 +130,39 @@ function Login() {
       return;
     }
   
- 
-    if (!user) {
-      setError("🤷‍♂️ No user available. Please create an account.");
-      setEmail("");
-      setPassword("");
-      return;
+    try {
+      // Make an API request to the backend for login validation
+      const response = await axios.post("https://job-portal-server-1.onrender.com/login", { email, password });
+  
+      // If login successful, store user data and token in localStorage
+      if (response.status === 200) {
+        const user = response.data.user;
+        alert("👍 Login Successful!");
+        localStorage.setItem("authenticatedUser", JSON.stringify({ name: user.name, email: user.email }));
+        localStorage.setItem("isAdmin", "false");
+  
+        setEmail("");
+        setPassword("");
+  
+        setTimeout(() => {
+          navigate("/home");
+        }, 1000);
+      }
+    } catch (error) {
+      // Check if backend returned an error (e.g., user not found or invalid credentials)
+      if (error.response) {
+        if (error.response.status === 404) {
+          setError("🤷‍♂️ No user available. Please create an account.");
+        } else if (error.response.status === 400) {
+          setError("❌ Email or password is incorrect");
+        } else {
+          setError("❌ Error occurred during login");
+        }
+      } else {
+        setError("❌ Error occurred during login");
+      }
     }
-  
-    
-    if (user.password !== password) {
-      setError("❌ Email or password is incorrect");
-      return;
-    }
-  
- 
-    setError("");
-    localStorage.setItem("authenticatedUser", JSON.stringify({ name: user.name, email: user.email }));
-    localStorage.setItem("isAdmin", "false");
-    setEmail("");
-    setPassword("");
-    alert("👍 Login Successful!");
-  
-    setTimeout(() => {
-      navigate("/home");
-    }, 1000);
   };
-  
   
   
   const handleForgotPassword = () => {
@@ -152,9 +189,6 @@ function Login() {
     setIsLogin(true);
   };
 
-  
-
-
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
@@ -166,6 +200,7 @@ function Login() {
   };
 
   return (
+    
     <div className="page-container">
     <h1 className="brand-title">
       ✨Career<span className="highlight">Crafter</span>
@@ -173,7 +208,7 @@ function Login() {
     <div className="auth-container">
       <div className={`form-box ${isLogin ? "login" : "register"}`}>
         <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
-
+       
         {!forgotPassword && (
           <input
             type="text"
@@ -294,7 +329,10 @@ function Login() {
         )}
       </div>
     </div>
+    
+    
     </div>
+    
   );
 }
 

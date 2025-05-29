@@ -37,3 +37,34 @@
     background-color: #0056b3;
   }
   
+  .skill-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    margin-top: 30px;
+  }
+  
+  .skill-name {
+    width: 100px;
+  }
+  
+  .progress-bar {
+    flex: 1;
+    background-color: #e0e0e0;
+    height: 20px;
+    margin: 0 10px;
+    cursor: pointer;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .progress {
+    height: 100%;
+    transition: width 0.3s ease-in-out;
+  }
+  
+  .percentage {
+    width: 50px;
+    text-align: right;
+  }
+  

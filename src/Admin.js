@@ -1,6 +1,7 @@
 import { useState,useEffect } from "react";
 import { saveJobsToDB, getJobsFromDB } from "./utils/indexedDB";
 
+
 import "./Admin.css";
 
 
@@ -14,6 +15,7 @@ export default function Admin() {
     skills: [],
     education: "",
     description: "",
+    graduationYear: "",
     vacancies: "",
     salary: ""
   });
@@ -111,6 +113,7 @@ useEffect(() => {
       workType: "",
       skills: [],
       education: "",
+      expectedYear: "", 
       description: "",
       vacancies: "",
       salary: "",
@@ -191,6 +194,26 @@ useEffect(() => {
             <option value="Salesforce">Salesforce</option>
           </select>
         </div>
+
+        <div className="form-group">
+  <label className="form-label">Expected Year of Joining:</label>
+  <select
+    name="expectedYear"
+    value={jobData.expectedYear}
+    onChange={handleChange}
+    className="form-input"
+    required
+  >
+    <option value="">Select Year</option>
+    {/* List of years from 2020 to 2028 */}
+    {Array.from({ length: 9 }, (_, index) => 2020 + index).map((year) => (
+      <option key={year} value={year}>
+        {year}
+      </option>
+    ))}
+  </select>
+</div>
+
 
       
         <div className="form-group">
@@ -305,6 +328,7 @@ useEffect(() => {
                 <p><strong>Description:</strong> {job.description}</p>
                 <p><strong>Vacancies:</strong> {job.vacancies}</p>
                 <p><strong>Salary:</strong> {job.salary}</p>
+                <p><strong>Expected Year of Joining:</strong> {job.expectedYear}</p>
                 <div className="button-container">
                 <button className="edit-button" onClick={() => handleEdit(index)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDelete(index)}>Delete</button>
