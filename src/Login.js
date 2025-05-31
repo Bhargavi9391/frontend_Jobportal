@@ -21,6 +21,8 @@ function Login() {
   const { darkMode, toggleTheme } = useTheme();
   const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
+  const API_BASE = "https://job-portal-server-1-nt8w.onrender.com";
+
 
   const conditions = [
     { regex: /[A-Z]/, text: "One uppercase letter" },
@@ -35,7 +37,7 @@ function Login() {
 
   const fetchUserCount = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/user-count");
+      const response = await axios.get("${API_BASE}/user-count");
       setUserCount(response.data.count); 
     } catch (error) {
       console.log(error);
@@ -75,7 +77,7 @@ function Login() {
     }
   
     // Send data to backend
-    fetch("https://job-portal-server-1.onrender.com/register", {
+    fetch("${API_BASE}/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -132,7 +134,7 @@ function Login() {
   
     try {
       // Make an API request to the backend for login validation
-      const response = await axios.post("https://job-portal-server-1.onrender.com/login", { email, password });
+      const response = await axios.post("${API_BASE}/login", { email, password });
   
       // If login successful, store user data and token in localStorage
       if (response.status === 200) {

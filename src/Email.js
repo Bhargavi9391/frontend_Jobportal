@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaEnvelope } from 'react-icons/fa';
 import axios from 'axios';
-import Navbar from "./Navbar";
+
 
 const Email = () => {
   const [message, setMessage] = useState("");

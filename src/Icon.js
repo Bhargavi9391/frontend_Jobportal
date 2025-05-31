@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Icon.css"; 
-import Navbar from "./Navbar";
+
 
 function Icon() {
   const navigate = useNavigate();

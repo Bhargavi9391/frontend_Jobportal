@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
 import './Select.css';
-import Navbar from "./Navbar";
+
 
 export default function Select() {
   const navigate = useNavigate();
