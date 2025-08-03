@@ -22,7 +22,9 @@ export default function Home() {
   const [applicationCount, setApplicationCount] = useState(0);
   const [hasViewedResults, setHasViewedResults] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-   const { isDark, toggleTheme } = useTheme();
+
+   const [notInterestedJobs, setNotInterestedJobs] = useState([]);
+
   
   const navigate = useNavigate();
 
@@ -55,16 +57,33 @@ export default function Home() {
   
   
   useEffect(() => {
-    const storedJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-    setPostedJobs(storedJobs);
+  const fetchJobs = async () => {
+    try {
+      const response = await axios.get("http://localhost:10000/jobs"); // Update with deployed URL later
+      setPostedJobs(response.data);
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error);
+    }
+  };
 
-    const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
-    setSavedJobs(storedSavedJobs);
-  }, []);
+  fetchJobs();
+
+  const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
+  setSavedJobs(storedSavedJobs);
+
+   const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+  setNotInterestedJobs(storedNotInterested);
+}, []);
 
   const handleNavigateToSelect = () => {
     navigate("/select"); // Adjust the path as needed
   };
+  const handleNotInterested = (jobId) => {
+  const updated = [...notInterestedJobs, jobId];
+  setNotInterestedJobs(updated);
+  localStorage.setItem("notInterestedJobs", JSON.stringify(updated));
+};
+
 
   const toggleSaveJob = (job) => {
     let updatedSavedJobs = [...savedJobs];
@@ -98,7 +117,7 @@ export default function Home() {
     localStorage.removeItem("authenticatedUser");
     localStorage.removeItem("isAdmin");
     localStorage.removeItem("savedJobs");
-    localStorage.removeItem("homePostedJobs");
+   
     navigate("/");
   };
 
@@ -150,36 +169,48 @@ export default function Home() {
 
       </nav>
     
+{postedJobs.length > 0 ? (
+  <div className="job-list">
+   {postedJobs
+  .filter((job) => !notInterestedJobs.includes(job._id))
+  .map((job, index) => (
 
-      {postedJobs.length > 0 ? (
-        <div className="job-list">
-          {postedJobs.map((job, index) => (
-            <div key={index} className="job-card">
-              <p>Posted {new Date(job.postedTime).toLocaleString()}</p>
-              <h3>{job.position} at {job.company}</h3>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Work Type:</strong> {job.workType}</p>
-              <p><strong>Skills:</strong> {Array.isArray(job.skills) ? job.skills.join(", ") : job.skills}</p>
-              <p><strong>Education:</strong> {job.education}</p>
-              <p><strong>Description:</strong> {job.description}</p>
-              <p><strong>Vacancies:</strong> {job.vacancies}</p>
-              <p><strong>Salary:</strong> {job.salary}</p>
-              <p><strong>Expected year:</strong>{job.expectedYear}</p>
+      <div key={index} className="job-card">
+        <p>
+          Posted {job.postedTime ? new Date(job.postedTime).toLocaleString() : "Unknown date"}
+        </p>
+        <h3>{job.position || "Unknown Role"} at {job.company || "Unknown Company"}</h3>
+        <p><strong>Location:</strong> {job.location || "Not specified"}</p>
+        <p><strong>Work Type:</strong> {job.workType || "Not specified"}</p>
+        <p><strong>Skills:</strong> {Array.isArray(job.skills) ? job.skills.join(", ") : job.skills || "None"}</p>
+        <p><strong>Education:</strong> {job.education || "Not mentioned"}</p>
+        <p><strong>Description:</strong> {job.description || "No description"}</p>
+        <p><strong>Vacancies:</strong> {job.vacancies || "N/A"}</p>
+        <p><strong>Salary:</strong> {job.salary || "Not disclosed"}</p>
+        <p><strong>Expected year:</strong> {job.expectedYear || "Not mentioned"}</p>
 
-              <div className="job-actions">
-                <button className="save-btn" onClick={() => toggleSaveJob(job)}>
-                  {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
-                </button>
-                <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
-                  Apply
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="job-actions">
+          <button className="save-btn" onClick={() => toggleSaveJob(job)}>
+            {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
+          </button>
+          <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
+            Apply
+          </button>
+          <button
+              className="not-interested-btn"
+              onClick={() => handleNotInterested(job._id)}
+            >
+              ❌ Not Interested
+            </button>
+
         </div>
-      ) : (
-        <p className="no-jobs">No jobs available.</p>
-      )}
+      </div>
+    ))}
+  </div>
+) : (
+  <p className="no-jobs">No jobs available.</p>
+)}
+
 
       {showLogoutModal && (
         <div className="logout-modal">

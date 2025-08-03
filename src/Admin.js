@@ -1,12 +1,9 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { saveJobsToDB, getJobsFromDB } from "./utils/indexedDB";
-
-
+import axios from "axios";
 import "./Admin.css";
 
-
 export default function Admin() {
- 
   const [jobData, setJobData] = useState({
     position: "",
     company: "",
@@ -15,7 +12,7 @@ export default function Admin() {
     skills: [],
     education: "",
     description: "",
-    graduationYear: "",
+    expectedYear: "",
     vacancies: "",
     salary: ""
   });
@@ -26,30 +23,21 @@ export default function Admin() {
 
   useEffect(() => {
     getJobsFromDB().then((data) => {
-        setSubmittedData(data);
+      setSubmittedData(data);
     });
-}, []);
+  }, []);
 
-useEffect(() => {
-  if (submittedData.length > 0) {
-    saveJobsToDB([...submittedData]);  
-  }
-}, []);  
+  useEffect(() => {
+    if (submittedData.length > 0) {
+      saveJobsToDB([...submittedData]);
+    }
+  }, []);
 
-  
-  
- 
-  
   useEffect(() => {
     localStorage.setItem("submittedJobs", JSON.stringify(submittedData));
   }, [submittedData]);
-  
 
   const [editingIndex, setEditingIndex] = useState(null);
-  
-  
-  
- 
 
   const jobDescriptions = {
     "Software Engineer": "Designs, develops, and optimizes software applications. Requires strong programming skills, problem-solving abilities, and knowledge of data structures, algorithms, and software development methodologies.",
@@ -66,18 +54,13 @@ useEffect(() => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     setJobData((prevData) => ({
       ...prevData,
       [name]: value,
-      description: name === "position" ? jobDescriptions[value] || "" : prevData.description, // Auto-fill description
+      description: name === "position" ? jobDescriptions[value] || "" : prevData.description,
     }));
   };
-  
-  
-  
 
-  
   const handleSkillsChange = (e) => {
     const selectedSkill = e.target.value;
     if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
@@ -87,25 +70,36 @@ useEffect(() => {
       }));
     }
   };
-  
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!jobData.position || !jobData.company) {
       alert("Please fill in required fields.");
       return;
     }
-  
+
+    const jobToPost = {
+      ...jobData,
+      postedTime: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post("http://localhost:10000/jobs", jobToPost);
+      alert("✅ Job Posted Successfully!");
+    } catch (error) {
+      alert("❌ Failed to post job. Check console.");
+      console.error("Post error:", error);
+    }
+
     let updatedData = [...submittedData];
-  
     if (editingIndex !== null) {
       updatedData[editingIndex] = { ...jobData };
     } else {
       updatedData.push(jobData);
     }
-  
+
     setSubmittedData(updatedData);
     setEditingIndex(null);
-  
     setJobData({
       position: "",
       company: "",
@@ -113,53 +107,48 @@ useEffect(() => {
       workType: "",
       skills: [],
       education: "",
-      expectedYear: "", 
+      expectedYear: "",
       description: "",
       vacancies: "",
       salary: "",
     });
   };
-  
-  
-  
-  
-  const handleDelete = (index) => {
-    const updatedJobs = submittedData.filter((_, i) => i !== index);
-    setSubmittedData(updatedJobs);
-  
 
-    let homeJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-    homeJobs = homeJobs.filter(job => job.position !== submittedData[index].position || job.company !== submittedData[index].company);
-    localStorage.setItem("homePostedJobs", JSON.stringify(homeJobs));
-  
-    localStorage.setItem("submittedJobs", JSON.stringify(updatedJobs));
-  };
-  
-  
+  const handleDelete = async (index) => {
+  const jobToDelete = submittedData[index];
+
+  try {
+    // First delete from backend (if it was posted there)
+    if (jobToDelete._id) {
+      await axios.delete(`http://localhost:10000/jobs/${jobToDelete._id}`);
+    }
+  } catch (error) {
+    console.error("❌ Failed to delete job from backend:", error);
+  }
+
+  // Then delete from local state and storage
+  const updatedJobs = submittedData.filter((_, i) => i !== index);
+  setSubmittedData(updatedJobs);
+  localStorage.setItem("submittedJobs", JSON.stringify(updatedJobs));
+};
+
   const handleEdit = (index) => {
-    setJobData({ ...submittedData[index] }); 
+    setJobData({ ...submittedData[index] });
     setEditingIndex(index);
   };
+  const handlePostJob = async (job) => {
+  try {
+    await axios.post("http://localhost:10000/jobs", {
+      ...job,
+      postedTime: new Date().toISOString()
+    });
+    alert("✅ Job re-posted successfully!");
+  } catch (error) {
+    alert("❌ Failed to re-post job.");
+    console.error("Re-post error:", error);
+  }
+};
 
-  const handlePostJob = (job) => {
-    if (!job.position || !job.company || !job.location) {
-      alert("Job must have a title, company, and location.");
-      return;
-    }
-  
-    let homePostedJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-  
-
-    const jobWithTimestamp = { ...job, postedTime: Date.now() };
-  
-    homePostedJobs.push(jobWithTimestamp);
-  
-    localStorage.setItem("homePostedJobs", JSON.stringify(homePostedJobs));
-  
-    alert(`Job Posted Successfully! Total Jobs: ${homePostedJobs.length}`);
-  };
-  
-  
  
   return (
     <div className="admin-container">
