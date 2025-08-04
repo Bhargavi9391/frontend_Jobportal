@@ -23,7 +23,7 @@ function Login() {
   const navigate = useNavigate();
    const API_BASE = "http://localhost:10000";
 
-  // const API_BASE = "https://job-portal-server-1-nt8w.onrender.com";
+   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
  
   const conditions = [
     { regex: /[A-Z]/, text: "One uppercase letter" },
