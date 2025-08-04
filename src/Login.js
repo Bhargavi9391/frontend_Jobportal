@@ -21,7 +21,7 @@ function Login() {
   const { darkMode, toggleTheme } = useTheme();
   const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
-   const API_BASE = "http://localhost:10000";
+   
 
    const API_BASE = "https://jobportal-backend-xoym.onrender.com";
  
