@@ -76,36 +76,34 @@ function Login() {
       return;
     }
 
-    // Send data to backend
+ 
  fetch(`${API_BASE}/register`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ name, email, password }),
 })
+  .then((res) => {
+    if (res.ok) return res.json();
+    throw new Error("Failed to register");
+  })
+  .then((data) => {
+    alert("🙂 Registration Successful!");
+    setEmail("");
+    setPassword("");
+    setName("");
+    setConfirmPassword("");
+    setIsLogin(true);
+    localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
 
-    })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("Failed to register");
-      })
-      .then((data) => {
-        alert("🙂 Registration Successful!");
-        setEmail("");
-        setPassword("");
-        setName("");
-        setConfirmPassword("");
-        setIsLogin(true);
-        localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
+    // Save the new user to localStorage
+    registeredUsers.push({ name, email, password });
+    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+  })
+  .catch((err) => {
+    setError("🚫 Registration failed. Try again later.");
+    console.error(err);
+  });
 
-        // Save the new user to localStorage
-        registeredUsers.push({ name, email, password });
-        localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-      })
-      .catch((err) => {
-        setError("🚫 Registration failed. Try again later.");
-        console.error(err);
-      });
-  };
 
   const validateLogin = async () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
