@@ -77,16 +77,12 @@ function Login() {
     }
 
     // Send data to backend
-    fetch(`${API_BASE}/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-      }),
+ fetch(`${API_BASE}/register`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name, email, password }),
+})
+
     })
       .then((res) => {
         if (res.ok) return res.json();
