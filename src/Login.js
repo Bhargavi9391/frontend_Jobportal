@@ -103,7 +103,7 @@ function Login() {
     setError("🚫 Registration failed. Try again later.");
     console.error(err);
   });
-
+  };
 
   const validateLogin = async () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
