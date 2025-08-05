@@ -45,66 +45,54 @@ function Login() {
     }
   };
 
-  const validateRegister = () => {
-    setError("");
+ const validateRegister = () => {
+  setError("");
 
-    if (!email || !name || !password || !confirmPassword) {
-      setError("⚠️ All fields are required!");
-      return;
-    }
+  if (!email || !name || !password || !confirmPassword) {
+    setError("⚠️ All fields are required!");
+    return;
+  }
 
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+  if (!email.includes("@")) {
+    setError("🤷‍♂️ Invalid email format!");
+    return;
+  }
 
-    const userExists = registeredUsers.some((user) => user.email === email);
-    if (userExists) {
-      setError("🚫 Email is already registered. Please login.");
-      return;
-    }
+  if (!conditions.every(({ regex }) => regex.test(password))) {
+    setError("Password must meet all requirements");
+    return;
+  }
 
-    if (!email.includes("@")) {
-      setError("🤷‍♂️ Invalid email format!");
-      return;
-    }
-
-    if (!conditions.every(({ regex }) => regex.test(password))) {
-      setError("Password must meet all requirements");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
 
  
  fetch(`${API_BASE}/register`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name, email, password }),
-})
-  .then((res) => {
-    if (res.ok) return res.json();
-    throw new Error("Failed to register");
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
   })
-  .then((data) => {
-    alert("🙂 Registration Successful!");
-    setEmail("");
-    setPassword("");
-    setName("");
-    setConfirmPassword("");
-    setIsLogin(true);
-    localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
+    .then((res) => {
+      if (res.ok) return res.json();
+      throw new Error("Failed to register");
+    })
+    .then((data) => {
+      alert("🙂 Registration Successful!");
+      setEmail("");
+      setPassword("");
+      setName("");
+      setConfirmPassword("");
+      setIsLogin(true);
 
-    // Save the new user to localStorage
-    registeredUsers.push({ name, email, password });
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-  })
-  .catch((err) => {
-    setError("🚫 Registration failed. Try again later.");
-    console.error(err);
-  });
-  };
-
+      localStorage.setItem("authenticatedUser", JSON.stringify({ name, email }));
+    })
+    .catch((err) => {
+      setError("🚫 Registration failed. Try again later.");
+      console.error(err);
+    });
+};
   const validateLogin = async () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
 
@@ -159,29 +147,39 @@ function Login() {
     }
   };
 
-  const handleForgotPassword = () => {
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-    let userIndex = registeredUsers.findIndex((user) => user.email === email);
+const handleForgotPassword = async () => {
+  if (!email) {
+    setError("Please enter your registered email.");
+    return;
+  }
 
-    if (userIndex === -1) {
-      setError("Email not found. Please register first.");
-      return;
+  if (!conditions.every(({ regex }) => regex.test(newPassword))) {
+    setError("New password must meet all requirements.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${API_BASE}/reset-password`, {
+      email,
+      newPassword,
+    });
+
+    if (response.status === 200) {
+      alert("🙂 Password reset successful! Please login.");
+      setForgotPassword(false);
+      setNewPassword("");
+      setError("");
+      setIsLogin(true);
     }
-
-    if (!conditions.every(({ regex }) => regex.test(newPassword))) {
-      setError("New password must meet all requirements.");
-      return;
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      setError("❌ Email not found. Please register first.");
+    } else {
+      setError("❌ Error resetting password.");
     }
+  }
+};
 
-    registeredUsers[userIndex].password = newPassword;
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
-
-    alert("🙂Password reset successful! Please login with your new password.");
-    setForgotPassword(false);
-    setNewPassword("");
-    setError("");
-    setIsLogin(true);
-  };
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
