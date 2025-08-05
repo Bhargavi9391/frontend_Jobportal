@@ -21,7 +21,7 @@ function Login() {
   const { darkMode, toggleTheme } = useTheme();
   const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
-  const API_BASE = "https://frontend-jobportal-wt9b.onrender.com";
+  const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
   const conditions = [
     { regex: /[A-Z]/, text: "One uppercase letter" },
