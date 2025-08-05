@@ -118,7 +118,7 @@ export default function Admin() {
     }
 
     try {
-      const response = await axios.post("https://backend-jobportal.onrender.com/jobs", job);
+      const response = await axios.post("https://jobportal-backend-xoym.onrender.com/jobs", job);
       alert(response.data.message || "Job posted successfully!");
     } catch (error) {
       console.error("Error posting job:", error);
