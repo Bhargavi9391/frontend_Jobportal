@@ -73,22 +73,37 @@ function Login() {
   };
 
   const handleLogin = () => {
-    if (!email || !password) {
-      setError("Enter email and password.");
-      return;
-    }
+  if (!email || !password) {
+    setError("Enter email and password.");
+    return;
+  }
 
-    // Admin login
-    if (email === adminEmail && password === adminPassword) {
-      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
-      localStorage.setItem("isAdmin", "true");
-      alert("👑 Welcome Admin");
-      navigate("/admin");
-      return;
-    }
+  // Admin login
+  if (email === adminEmail && password === adminPassword) {
+    localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
+    localStorage.setItem("isAdmin", "true");
+    alert("👑 Welcome Admin");
+    navigate("/admin");
+    return;
+  }
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    let user = users.find((u) => u.email === email && u.password === password);
+  let users = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+  let user = users.find((u) => u.email === email && u.password === password);
+
+  if (!user) {
+    setError("Invalid credentials.");
+    return;
+  }
+
+  localStorage.setItem("authenticatedUser", JSON.stringify(user));
+  localStorage.setItem("isAdmin", "false");
+  alert("✅ Logged in successfully");
+  navigate("/home");
+};
+
+let users = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+let user = users.find((u) => u.email === email && u.password === password);
+
 
     if (!user) {
       setError("Invalid credentials.");
