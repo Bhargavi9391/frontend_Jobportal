@@ -148,7 +148,8 @@ function Login() {
         ✨Career<span className="highlight">Crafter</span>
       </h1>
       <div className="auth-container">
-        <div className={form-box ${isLogin ? "login" : "register"}}>
+        <div className={`form-box ${isLogin ? "login" : "register"}`}>
+
           <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
 
           {!forgotPassword && (
