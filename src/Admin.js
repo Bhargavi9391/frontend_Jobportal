@@ -52,95 +52,94 @@ export default function Admin() {
     "UI/UX Designer": "Creates visually appealing and user-friendly digital experiences. Requires skills in wireframing, prototyping, Figma, Adobe XD, usability testing, user research, accessibility, and responsive design principles."
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setJobData((prevData) => ({
+    ...prevData,
+    [name]: value,
+    description: name === "position" ? jobDescriptions[value] || "" : prevData.description,
+  }));
+};
+
+const handleSkillsChange = (e) => {
+  const selectedSkill = e.target.value;
+  if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
     setJobData((prevData) => ({
       ...prevData,
-      [name]: value,
-      description: name === "position" ? jobDescriptions[value] || "" : prevData.description,
+      skills: [...prevData.skills, selectedSkill],
     }));
+  }
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!jobData.position || !jobData.company) {
+    alert("Please fill in required fields.");
+    return;
+  }
+
+  const jobToPost = {
+    ...jobData,
+    postedTime: new Date().toISOString(),
   };
 
-  const handleSkillsChange = (e) => {
-    const selectedSkill = e.target.value;
-    if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
-      setJobData((prevData) => ({
-        ...prevData,
-        skills: [...prevData.skills, selectedSkill],
-      }));
-    }
-  };
+  try {
+    await axios.post("https://jobportal-backend-xoym.onrender.com/jobs", jobToPost);
+    alert("✅ Job Posted Successfully!");
+  } catch (error) {
+    alert("❌ Failed to post job. Check console.");
+    console.error("Post error:", error);
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!jobData.position || !jobData.company) {
-      alert("Please fill in required fields.");
-      return;
-    }
+  let updatedData = [...submittedData];
+  if (editingIndex !== null) {
+    updatedData[editingIndex] = { ...jobData };
+  } else {
+    updatedData.push(jobData);
+  }
 
-    const jobToPost = {
-      ...jobData,
-      postedTime: new Date().toISOString(),
-    };
+  setSubmittedData(updatedData);
+  setEditingIndex(null);
+  setJobData({
+    position: "",
+    company: "",
+    location: "",
+    workType: "",
+    skills: [],
+    education: "",
+    expectedYear: "",
+    description: "",
+    vacancies: "",
+    salary: "",
+  });
+};
 
-    try {
-      await axios.post("http://localhost:10000/jobs", jobToPost);
-      alert("✅ Job Posted Successfully!");
-    } catch (error) {
-      alert("❌ Failed to post job. Check console.");
-      console.error("Post error:", error);
-    }
-
-    let updatedData = [...submittedData];
-    if (editingIndex !== null) {
-      updatedData[editingIndex] = { ...jobData };
-    } else {
-      updatedData.push(jobData);
-    }
-
-    setSubmittedData(updatedData);
-    setEditingIndex(null);
-    setJobData({
-      position: "",
-      company: "",
-      location: "",
-      workType: "",
-      skills: [],
-      education: "",
-      expectedYear: "",
-      description: "",
-      vacancies: "",
-      salary: "",
-    });
-  };
-
-  const handleDelete = async (index) => {
+const handleDelete = async (index) => {
   const jobToDelete = submittedData[index];
 
   try {
-    // First delete from backend (if it was posted there)
     if (jobToDelete._id) {
-      await axios.delete(`http://localhost:10000/jobs/${jobToDelete._id}`);
+      await axios.delete(`https://jobportal-backend-xoym.onrender.com/jobs/${jobToDelete._id}`);
     }
   } catch (error) {
     console.error("❌ Failed to delete job from backend:", error);
   }
 
-  // Then delete from local state and storage
   const updatedJobs = submittedData.filter((_, i) => i !== index);
   setSubmittedData(updatedJobs);
   localStorage.setItem("submittedJobs", JSON.stringify(updatedJobs));
 };
 
-  const handleEdit = (index) => {
-    setJobData({ ...submittedData[index] });
-    setEditingIndex(index);
-  };
-  const handlePostJob = async (job) => {
+const handleEdit = (index) => {
+  setJobData({ ...submittedData[index] });
+  setEditingIndex(index);
+};
+
+const handlePostJob = async (job) => {
   try {
-    await axios.post("http://localhost:10000/jobs", {
+    await axios.post("https://jobportal-backend-xoym.onrender.com/jobs", {
       ...job,
-      postedTime: new Date().toISOString()
+      postedTime: new Date().toISOString(),
     });
     alert("✅ Job re-posted successfully!");
   } catch (error) {
@@ -149,7 +148,6 @@ export default function Admin() {
   }
 };
 
- 
   return (
     <div className="admin-container">
       <h2 className="form-title">Job Details Form</h2>
