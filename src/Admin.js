@@ -112,15 +112,20 @@
      setEditingIndex(index);
    };
 const handlePostJob = async (job) => {
-  const formattedJobData = {
-    ...job,
-    postedTime: new Date().toISOString(), // Ensure date is properly formatted
-    skills: job.skills || [],              // Ensure skills field is present
-  };
+ const formattedJobData = {
+  ...job,
+  postedTime: new Date().toISOString(),
+  skills: Array.isArray(job.skills)
+    ? job.skills
+    : typeof job.skills === "string"
+      ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
+      : [], 
+};
+
 
   try {
     const res = await axios.post(
-      "https://backend-jobportal.onrender.com/jobs",
+      "https://jobportal-backend-xoym.onrender.com/jobs",
       formattedJobData
     );
     console.log("Job posted successfully!", res.data);
