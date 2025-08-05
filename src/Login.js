@@ -142,146 +142,145 @@ function Login() {
 
   
 
-  return (
-    <div className="page-container">
-      <h1 className="brand-title">
-        ✨Career<span className="highlight">Crafter</span>
-      </h1>
-      <div className="auth-container">
-        <div className={`form-box ${isLogin ? "login" : "register"}`}>
+return (
+  <div className="page-container">
+    <h1 className="brand-title">
+      ✨Career<span className="highlight">Crafter</span>
+    </h1>
+    <div className="auth-container">
+      <div className={`form-box ${isLogin ? "login" : "register"}`}>
+        <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
 
-          <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
+        {!forgotPassword && (
+          <input
+            type="text"
+            placeholder="📩Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        )}
 
-          {!forgotPassword && (
-            <input
-              type="text"
-              placeholder="📩Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          )}
-
-          {forgotPassword ? (
-            <>
-              <div className="password-container">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="🔑Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  onFocus={() => setShowTooltip(true)}
-                  onBlur={() => setShowTooltip(false)}
-                />
+        {forgotPassword ? (
+          <>
+            <div className="password-container">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="🔑Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                onFocus={() => setShowTooltip(true)}
+                onBlur={() => setShowTooltip(false)}
+              />
               <i
-  className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`}
-  onClick={() => setShowNewPassword(!showNewPassword)}
-></i>
+                className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`}
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              ></i>
 
+              {showTooltip && (
+                <div className="tooltip">
+                  {conditions.map(({ regex, text }, index) => (
+                    <p key={index} className={regex.test(newPassword) ? "valid" : "invalid"}>
+                      {regex.test(newPassword) ? "✔" : "✖"} {text}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
 
-                {showTooltip && (
-                  <div className="tooltip">
-                    {conditions.map(({ regex, text }, index) => (
-                      <p key={index} className={regex.test(newPassword) ? "valid" : "invalid"}>
-                        {regex.test(newPassword) ? "✔" : "✖"} {text}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
-              {error && <p style={{ color: "red" }}>{error}</p>}
+            <button onClick={handleForgotPassword}>Reset Password</button>
+            <p
+              style={{ color: "black" }}
+              onClick={() => {
+                setForgotPassword(false);
+                setError("");
+                setNewPassword("");
+              }}
+            >
+              Back to <span style={{ color: "blue" }}>Login</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="password-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="🔑Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => !isLogin && setShowTooltip(true)}
+                onBlur={() => setShowTooltip(false)}
+              />
+              <i
+                className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`}
+                onClick={() => setShowPassword(!showPassword)}
+              ></i>
 
-              <button onClick={handleForgotPassword}>Reset Password</button>
-              <p
-                style={{ color: "black" }}
-                onClick={() => {
-                  setForgotPassword(false);
-                  setError("");
-                  setNewPassword("");
-                }}
-              >
-                Back to <span style={{ color: "blue" }}>Login</span>
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="password-container">
+              {!isLogin && showTooltip && (
+                <div className="tooltip">
+                  {conditions.map(({ regex, text }, index) => (
+                    <p key={index} className={regex.test(password) ? "valid" : "invalid"}>
+                      {regex.test(password) ? "✔" : "✖"} {text}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!isLogin && (
+              <>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="🔑Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => !isLogin && setShowTooltip(true)}
-                  onBlur={() => setShowTooltip(false)}
+                  type="text"
+                  placeholder="👤Enter your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
-                <i
-                  className={bi ${showPassword ? "bi-eye" : "bi-eye-slash"}}
-                  onClick={() => setShowPassword(!showPassword)}
-                ></i>
-
-                {!isLogin && showTooltip && (
-                  <div className="tooltip">
-                    {conditions.map(({ regex, text }, index) => (
-                      <p key={index} className={regex.test(password) ? "valid" : "invalid"}>
-                        {regex.test(password) ? "✔" : "✖"} {text}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {!isLogin && (
-                <>
+                <div className="password-container">
                   <input
-                    type="text"
-                    placeholder="👤Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="🔑Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                   />
-                  <div className="password-container">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="🔑Confirm Password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                    <i
-                      className={bi ${showConfirmPassword ? "bi-eye" : "bi-eye-slash"}}
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    ></i>
-                  </div>
+                  <i
+                    className={`bi ${showConfirmPassword ? "bi-eye" : "bi-eye-slash"}`}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  ></i>
+                </div>
+              </>
+            )}
+
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            <button onClick={!isLogin ? validateRegister : handleLogin}>
+              {isLogin ? "Login" : "Register"}
+            </button>
+
+            <p onClick={toggleForm}>
+              {isLogin ? (
+                <>
+                  Don't have an account? <span style={{ color: "blue" }}>Register</span>
+                </>
+              ) : (
+                <>
+                  Already have an account? <span style={{ color: "#C71585" }}>Login</span>
                 </>
               )}
+            </p>
 
-              {error && <p style={{ color: "red" }}>{error}</p>}
-
-              <button onClick={!isLogin ? validateRegister : handleLogin}>
-  {isLogin ? "Login" : "Register"}
-</button>
-
-              <p onClick={toggleForm}>
-                {isLogin ? (
-                  <>
-                    Don't have an account? <span style={{ color: "blue" }}>Register</span>
-                  </>
-                ) : (
-                  <>
-                    Already have an account? <span style={{ color: "#C71585" }}>Login</span>
-                  </>
-                )}
+            {isLogin && (
+              <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
+                Forgot Password?
               </p>
-
-              {isLogin && (
-                <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
-                  Forgot Password?
-                </p>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 export default Login; 
