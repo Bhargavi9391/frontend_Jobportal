@@ -173,7 +173,8 @@ function Login() {
                   onBlur={() => setShowTooltip(false)}
                 />
                 <i
-                  className={bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}}
+             <i className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`} />
+
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 ></i>
 
