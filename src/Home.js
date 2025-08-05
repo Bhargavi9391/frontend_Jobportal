@@ -56,22 +56,20 @@ export default function Home() {
   }, []);
   
   
-  useEffect(() => {
-  const fetchJobs = async () => {
-    try {
-      const response = await axios.get("http://localhost:10000/jobs"); // Update with deployed URL later
-      setPostedJobs(response.data);
-    } catch (error) {
-      console.error("Failed to fetch jobs:", error);
-    }
-  };
-
-  fetchJobs();
+  
+useEffect(() => {
+  axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
+    .then((response) => {
+      setJobs(response.data);
+    })
+    .catch((error) => {
+      console.error("Error fetching jobs:", error);
+    });
 
   const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
   setSavedJobs(storedSavedJobs);
 
-   const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+  const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
   setNotInterestedJobs(storedNotInterested);
 }, []);
 
@@ -169,9 +167,9 @@ export default function Home() {
 
       </nav>
     
-{postedJobs.length > 0 ? (
+{jobs.length > 0 ? (
   <div className="job-list">
-   {postedJobs
+   {jobs
   .filter((job) => !notInterestedJobs.includes(job._id))
   .map((job, index) => (
 
