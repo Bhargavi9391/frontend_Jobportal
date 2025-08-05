@@ -4,19 +4,20 @@ import axios from "axios";
 import "./Admin.css";
 
 export default function Admin() {
-  const [jobData, setJobData] = useState({
-    position: "",
-    company: "",
-    location: "",
-    workType: "",
-    skills: "",
-     expectedYear:"", 
-    description: "",
-    expectedYear: "",
-    vacancies: "",
-    salary: "",
-    postedTime: new Date()
-  });
+ const [jobData, setJobData] = useState({
+  position: "",
+  company: "",
+  location: "",
+  workType: "",
+  skills: "",           
+  education: "",
+  expectedYear: "",  
+  description: "",
+  vacancies: "",
+  salary: "",
+  postedTime: new Date()
+});
+
 
   const [submittedData, setSubmittedData] = useState([]);
 
