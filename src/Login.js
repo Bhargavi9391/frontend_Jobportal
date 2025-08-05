@@ -72,54 +72,34 @@ function Login() {
     toggleForm(); // switch to login form after successful registration
   };
 
-  const validateLogin = async () => {
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-
+  const handleLogin = () => {
     if (!email || !password) {
-      setError("✍️ Please enter email and password");
+      setError("Enter email and password.");
       return;
     }
 
-    // Check for admin credentials
+    // Admin login
     if (email === adminEmail && password === adminPassword) {
-      alert("👑 Welcome, Admin!");
-      setIsAdmin(true);
-      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email: adminEmail }));
+      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
       localStorage.setItem("isAdmin", "true");
-
-      setTimeout(() => navigate("/admin"), 1000);
+      alert("👑 Welcome Admin");
+      navigate("/admin");
       return;
     }
 
-    try {
-      const response = await axios.post(`${API_BASE}/login`, { email, password });
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let user = users.find((u) => u.email === email && u.password === password);
 
-      if (response.status === 200) {
-        const user = response.data.user;
-        alert("👍 Login Successful!");
-        localStorage.setItem("authenticatedUser", JSON.stringify({ name: user.name, email: user.email }));
-        localStorage.setItem("isAdmin", "false");
-
-        setEmail("");
-        setPassword("");
-
-        setTimeout(() => navigate("/home"), 1000);
-      }
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status === 404) {
-          setError("🤷‍♂️ No user available. Please create an account.");
-        } else if (error.response.status === 400) {
-          setError("❌ Email or password is incorrect");
-        } else {
-          setError("❌ Error occurred during login");
-        }
-      } else {
-        setError("❌ Error occurred during login");
-      }
+    if (!user) {
+      setError("Invalid credentials.");
+      return;
     }
-  };
 
+    localStorage.setItem("authenticatedUser", JSON.stringify(user));
+    localStorage.setItem("isAdmin", "false");
+    alert("✅ Logged in successfully");
+    navigate("/home");
+  };
   const handleForgotPassword = () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
     let userIndex = registeredUsers.findIndex((user) => user.email === email);
@@ -270,9 +250,9 @@ function Login() {
 
               {error && <p style={{ color: "red" }}>{error}</p>}
 
-              <button onClick={!isLogin ? validateRegister : validateLogin}>
-                {isLogin ? "Login" : "Register"}
-              </button>
+              <button onClick={!isLogin ? validateRegister : handleLogin}>
+  {isLogin ? "Login" : "Register"}
+</button>
 
               <p onClick={toggleForm}>
                 {isLogin ? (
