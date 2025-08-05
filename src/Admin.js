@@ -114,16 +114,19 @@
 const handlePostJob = async (job) => {
   const formattedJobData = {
     ...job,
-    postedTime: new Date(),
+    postedTime: new Date().toISOString(), // Ensure date is properly formatted
+    skills: job.skills || [],              // Ensure skills field is present
   };
 
   try {
     const res = await axios.post(
-      "https://jobportal-backend-xoym.onrender.com/jobs",
+      "https://backend-jobportal.onrender.com/jobs",
       formattedJobData
     );
     console.log("Job posted successfully!", res.data);
     alert("Job posted successfully!");
+
+    // OPTIONAL: Clear it from local submittedData (if needed)
   } catch (err) {
     console.error("Error posting job:", err);
     alert("Error posting job. Please try again.");
