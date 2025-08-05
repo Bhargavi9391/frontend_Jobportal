@@ -4,19 +4,18 @@
  import "./Admin.css";
  
  export default function Admin() {
-  const [jobData, setJobData] = useState({
-   position: "",
-   company: "",
-   location: "",
-   workType: "",
-   skills: [],           
-   education: "",
-   expectedYear: "",  
-   description: "",
-   vacancies: "",
-   salary: "",
-   postedTime: new Date()
- });
+ const [jobData, setJobData] = useState({
+  position: "",
+  company: "",
+  location: "",
+  workType: "",
+  expectedYear: "", 
+  description: "",
+  vacancies: "",
+  salary: "",
+  postedTime: new Date()
+});
+
  
  
    const [submittedData, setSubmittedData] = useState([]);
@@ -112,13 +111,9 @@
      setJobData({ ...submittedData[index] });
      setEditingIndex(index);
    };
- 
- const handlePostJob = async (job) => {
+const handlePostJob = async (job) => {
   const formattedJobData = {
     ...job,
-    skills: Array.isArray(job.skills)
-      ? job.skills.map(s => s.trim())
-      : job.skills.split(',').map(s => s.trim()),
     postedTime: new Date(),
   };
 
