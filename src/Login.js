@@ -34,15 +34,6 @@ function Login() {
   const adminEmail = "admin@gmail.com";
   const adminPassword = "Admin@123";
 
-  const fetchUserCount = async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/user-count`);
-      setUserCount(response.data.count);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const validateRegister = () => {
     setError("");
 
@@ -74,6 +65,11 @@ function Login() {
       return;
     }
 
+    registeredUsers.push({ name, email, password });
+    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+
+    alert("✅ Registration successful! Please log in.");
+    toggleForm(); // switch to login form after successful registration
   };
 
   const validateLogin = async () => {
@@ -84,24 +80,20 @@ function Login() {
       return;
     }
 
-    // Check for admin credentials first
+    // Check for admin credentials
     if (email === adminEmail && password === adminPassword) {
       alert("👑 Welcome, Admin!");
       setIsAdmin(true);
       localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email: adminEmail }));
       localStorage.setItem("isAdmin", "true");
 
-      setTimeout(() => {
-        navigate("/admin");
-      }, 1000);
+      setTimeout(() => navigate("/admin"), 1000);
       return;
     }
 
     try {
-      // Make an API request to the backend for login validation
       const response = await axios.post(`${API_BASE}/login`, { email, password });
 
-      // If login successful, store user data and token in localStorage
       if (response.status === 200) {
         const user = response.data.user;
         alert("👍 Login Successful!");
@@ -111,9 +103,7 @@ function Login() {
         setEmail("");
         setPassword("");
 
-        setTimeout(() => {
-          navigate("/home");
-        }, 1000);
+        setTimeout(() => navigate("/home"), 1000);
       }
     } catch (error) {
       if (error.response) {
@@ -147,7 +137,7 @@ function Login() {
     registeredUsers[userIndex].password = newPassword;
     localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
 
-    alert("🙂Password reset successful! Please login with your new password.");
+    alert("🙂 Password reset successful! Please login with your new password.");
     setForgotPassword(false);
     setNewPassword("");
     setError("");
@@ -156,11 +146,17 @@ function Login() {
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
+    setForgotPassword(false);
     setError("");
     setEmail("");
     setPassword("");
     setName("");
     setConfirmPassword("");
+    setNewPassword("");
+    setShowTooltip(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setShowNewPassword(false);
   };
 
   return (
@@ -211,7 +207,14 @@ function Login() {
               {error && <p style={{ color: "red" }}>{error}</p>}
 
               <button onClick={handleForgotPassword}>Reset Password</button>
-              <p style={{ color: "black" }} onClick={() => setForgotPassword(false)}>
+              <p
+                style={{ color: "black" }}
+                onClick={() => {
+                  setForgotPassword(false);
+                  setError("");
+                  setNewPassword("");
+                }}
+              >
                 Back to <span style={{ color: "blue" }}>Login</span>
               </p>
             </>
