@@ -172,11 +172,11 @@ function Login() {
                   onFocus={() => setShowTooltip(true)}
                   onBlur={() => setShowTooltip(false)}
                 />
-                <i
-                 className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`} />
+              <i
+  className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`}
+  onClick={() => setShowNewPassword(!showNewPassword)}
+></i>
 
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                ></i>
 
                 {showTooltip && (
                   <div className="tooltip">
