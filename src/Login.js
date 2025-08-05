@@ -74,7 +74,7 @@ function Login() {
       return;
     }
 
-  
+  };
 
   const validateLogin = async () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
