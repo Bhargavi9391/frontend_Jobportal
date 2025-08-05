@@ -59,12 +59,14 @@ export default function Home() {
   
 useEffect(() => {
   axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
-    .then((response) => {
-      setJobs(response.data);
+    .then((res) => {
+      console.log("Fetched jobs:", res.data); 
+      setJobs(res.data);
     })
-    .catch((error) => {
-      console.error("Error fetching jobs:", error);
+    .catch((err) => {
+      console.error("Error fetching jobs:", err);
     });
+}, []);
 
   const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
   setSavedJobs(storedSavedJobs);
