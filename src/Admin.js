@@ -116,9 +116,8 @@
   const handlePostJob = async (job) => {
    const formattedJobData = {
      ...job,
-     skills: job.skills.map(skill => skill.trim()),
-     expectedYear: job.expectedYear || "Not Specified",         
-     postedTime: new Date()
+  skills: job.skills.split(',').map((s) => s.trim()),  
+  postedTime: new Date(),
    };
  
    try {
