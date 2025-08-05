@@ -9,12 +9,13 @@ export default function Admin() {
     company: "",
     location: "",
     workType: "",
-    skills: [],
-    education: "",
+    skills: skills.split(',').map(skill => skill.trim()),
+     expectedYear: expectedYear || "Not Specified", 
     description: "",
     expectedYear: "",
     vacancies: "",
-    salary: ""
+    salary: "",
+    postedTime: new Date()
   });
 
   const [submittedData, setSubmittedData] = useState([]);
