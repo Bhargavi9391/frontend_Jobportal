@@ -182,7 +182,11 @@ useEffect(() => {
         <h3>{job.position || "Unknown Role"} at {job.company || "Unknown Company"}</h3>
         <p><strong>Location:</strong> {job.location || "Not specified"}</p>
         <p><strong>Work Type:</strong> {job.workType || "Not specified"}</p>
-        <p><strong>Skills:</strong> {Array.isArray(job.skills) ? job.skills.join(", ") : job.skills || "None"}</p>
+        <p><strong>Skills:</strong>{Array.isArray(job.skills) ? (
+  job.skills.map((skill, i) => <li key={i}>{skill}</li>)
+) : (
+  <li>No skills listed</li>
+)}</p>
         <p><strong>Education:</strong> {job.education || "Not mentioned"}</p>
         <p><strong>Description:</strong> {job.description || "No description"}</p>
         <p><strong>Vacancies:</strong> {job.vacancies || "N/A"}</p>
