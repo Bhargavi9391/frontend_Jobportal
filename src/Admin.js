@@ -294,7 +294,8 @@ const handlePostJob = async (job) => {
                <div className="button-container">
                  <button className="edit-button" onClick={() => handleEdit(index)}>Edit</button>
                  <button className="delete-button" onClick={() => handleDelete(index)}>Delete</button>
-                 <button className="post-btn" onClick={() => handlePostJob(job)}>Post</button>
+                 <button type="button" className="post-btn" onClick={() => handlePostJob(job)}>Post</button>
+
 
  
                </div>
