@@ -1,147 +1,138 @@
- import { useState, useEffect } from "react";
- import { saveJobsToDB, getJobsFromDB } from "./utils/indexedDB";
- import axios from "axios";
- import "./Admin.css";
- 
- export default function Admin() {
-const [jobData, setJobData] = useState({
-  position: "",
-  company: "",
-  location: "",
-  workType: "",
-  expectedYear: "", 
-  description: "",
-  vacancies: "",
-  salary: "",
-  postedTime: new Date(),
-  skills: [], 
-  education: ""
-});
+import { useState, useEffect } from "react";
+import { saveJobsToDB, getJobsFromDB } from "./utils/indexedDB";
+import axios from "axios";
+import "./Admin.css";
 
+export default function Admin() {
+  const [jobData, setJobData] = useState({
+    position: "",
+    company: "",
+    location: "",
+    workType: "",
+    expectedYear: "",
+    description: "",
+    vacancies: "",
+    salary: "",
+    postedTime: new Date(),
+    skills: [],
+    education: ""
+  });
 
- 
- 
-   const [submittedData, setSubmittedData] = useState([]);
- 
-   const [editingIndex, setEditingIndex] = useState(null);
- 
-   // Fetch jobs from indexedDB initially
-   useEffect(() => {
-     getJobsFromDB().then((data) => {
-       setSubmittedData(data);
-     });
-   }, []);
- 
-   // Save to indexedDB when submittedData changes
-   useEffect(() => {
-     if (submittedData.length > 0) {
-       saveJobsToDB([...submittedData]);
-     }
-   }, [submittedData]);
- 
-   const jobDescriptions = {
-     "Software Engineer": "Designs, develops, and optimizes software applications...",
-     "Frontend Developer": "Builds responsive interfaces using modern frontend technologies...",
-     "Backend Developer": "Handles business logic, databases, and API development...",
-     "Full Stack Developer": "Combines frontend and backend development...",
-     "DevOps Engineer": "Automates CI/CD pipelines, manages infrastructure...",
-     "Data Scientist": "Processes and analyzes data to extract insights...",
-     "Machine Learning Engineer": "Builds and deploys ML models...",
-     "Cyber Security Analyst": "Protects systems from threats...",
-     "Cloud Engineer": "Manages cloud-based infrastructure...",
-     "UI/UX Designer": "Designs intuitive and attractive user interfaces..."
-   };
- 
-   const handleChange = (e) => {
-     const { name, value } = e.target;
- 
-     setJobData((prevData) => ({
-       ...prevData,
-       [name]: value,
-       description: name === "position" ? jobDescriptions[value] || "" : prevData.description
-     }));
-   };
- 
-   const handleSkillsChange = (e) => {
-     const selectedSkill = e.target.value;
-     if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
-       setJobData((prevData) => ({
-         ...prevData,
-         skills: [...prevData.skills, selectedSkill]
-       }));
-     }
-   };
- 
-   const handleSubmit = (e) => {
-     e.preventDefault();
- 
-     if (!jobData.position || !jobData.company) {
-       alert("Please fill in required fields.");
-       return;
-     }
- 
-     let updatedData = [...submittedData];
- 
-     if (editingIndex !== null) {
-       updatedData[editingIndex] = { ...jobData };
-     } else {
-       updatedData.push(jobData);
-     }
- 
-     setSubmittedData(updatedData);
-     setEditingIndex(null);
- 
+  const [submittedData, setSubmittedData] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  useEffect(() => {
+    getJobsFromDB().then((data) => {
+      setSubmittedData(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (submittedData.length > 0) {
+      saveJobsToDB([...submittedData]);
+    }
+  }, [submittedData]);
+
+  const jobDescriptions = {
+    "Software Engineer": "Designs, develops, and optimizes software applications...",
+    "Frontend Developer": "Builds responsive interfaces using modern frontend technologies...",
+    "Backend Developer": "Handles business logic, databases, and API development...",
+    "Full Stack Developer": "Combines frontend and backend development...",
+    "DevOps Engineer": "Automates CI/CD pipelines, manages infrastructure...",
+    "Data Scientist": "Processes and analyzes data to extract insights...",
+    "Machine Learning Engineer": "Builds and deploys ML models...",
+    "Cyber Security Analyst": "Protects systems from threats...",
+    "Cloud Engineer": "Manages cloud-based infrastructure...",
+    "UI/UX Designer": "Designs intuitive and attractive user interfaces..."
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setJobData((prevData) => ({
+      ...prevData,
+      [name]: value,
+      description: name === "position" ? jobDescriptions[value] || "" : prevData.description
+    }));
+  };
+
+  const handleSkillsChange = (e) => {
+    const selectedSkill = e.target.value;
+    if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
+      setJobData((prevData) => ({
+        ...prevData,
+        skills: [...prevData.skills, selectedSkill]
+      }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!jobData.position || !jobData.company) {
+      alert("Please fill in required fields.");
+      return;
+    }
+
+    let updatedData = [...submittedData];
+
+    if (editingIndex !== null) {
+      updatedData[editingIndex] = { ...jobData };
+    } else {
+      updatedData.push(jobData);
+    }
+
+    setSubmittedData(updatedData);
+    setEditingIndex(null);
+
+    // Clear form
     setJobData({
-  position: "",
-  company: "",
-  location: "",
-  workType: "",
-  expectedYear: "",
-  description: "",
-  vacancies: "",
-  salary: "",
-  skills: [], 
-  education: ""
-});
+      position: "",
+      company: "",
+      location: "",
+      workType: "",
+      expectedYear: "",
+      description: "",
+      vacancies: "",
+      salary: "",
+      skills: [],
+      education: ""
+    });
+  };
 
-   };
- 
-   const handleDelete = (index) => {
-     const updatedJobs = submittedData.filter((_, i) => i !== index);
-     setSubmittedData(updatedJobs);
-   };
- 
-   const handleEdit = (index) => {
-     setJobData({ ...submittedData[index] });
-     setEditingIndex(index);
-   };
-const handlePostJob = async (job) => {
- const formattedJobData = {
-  ...job,
-  postedTime: new Date().toISOString(),
-  skills: Array.isArray(job.skills)
-    ? job.skills
-    : typeof job.skills === "string"
-      ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
-      : [], 
-};
+  const handleDelete = (index) => {
+    const updatedJobs = submittedData.filter((_, i) => i !== index);
+    setSubmittedData(updatedJobs);
+  };
 
+  const handleEdit = (index) => {
+    setJobData({ ...submittedData[index] });
+    setEditingIndex(index);
+  };
 
-  try {
-    const res = await axios.post(
-      "https://jobportal-backend-xoym.onrender.com/jobs",
-      formattedJobData
-    );
-    console.log("Job posted successfully!", res.data);
-    alert("Job posted successfully!");
+  const handlePostJob = async (job) => {
+    const formattedJobData = {
+      ...job,
+      postedTime: new Date().toISOString(),
+      skills: Array.isArray(job.skills)
+        ? job.skills
+        : typeof job.skills === "string"
+          ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+    };
 
-    // OPTIONAL: Clear it from local submittedData (if needed)
-  } catch (err) {
-    console.error("Error posting job:", err);
-    alert("Error posting job. Please try again.");
-  }
-};
-
+    try {
+      const res = await axios.post(
+        "https://jobportal-backend-xoym.onrender.com/jobs",
+        formattedJobData
+      );
+      console.log("Job posted successfully!", res.data);
+      alert("Job posted successfully!");
+    } catch (err) {
+      console.error("Error posting job:", err);
+      alert("Error posting job. Please try again.");
+    }
+  };
  
    return (
      <div className="admin-container">
