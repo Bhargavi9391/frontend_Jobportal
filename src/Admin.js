@@ -4,7 +4,7 @@
  import "./Admin.css";
  
  export default function Admin() {
- const [jobData, setJobData] = useState({
+const [jobData, setJobData] = useState({
   position: "",
   company: "",
   location: "",
@@ -13,8 +13,11 @@
   description: "",
   vacancies: "",
   salary: "",
-  postedTime: new Date()
+  postedTime: new Date(),
+  skills: [], 
+  education: ""
 });
+
 
  
  
@@ -88,18 +91,19 @@
      setSubmittedData(updatedData);
      setEditingIndex(null);
  
-     setJobData({
-       position: "",
-       company: "",
-       location: "",
-       workType: "",
-       skills: [],
-       education: "",
-       expectedYear: "",
-       description: "",
-       vacancies: "",
-       salary: ""
-     });
+    setJobData({
+  position: "",
+  company: "",
+  location: "",
+  workType: "",
+  expectedYear: "",
+  description: "",
+  vacancies: "",
+  salary: "",
+  skills: [], 
+  education: ""
+});
+
    };
  
    const handleDelete = (index) => {
