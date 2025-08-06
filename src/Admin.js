@@ -111,32 +111,35 @@
      setJobData({ ...submittedData[index] });
      setEditingIndex(index);
    };
-const handlePostJob = async (job) => {
- const formattedJobData = {
-  ...job,
-  postedTime: new Date().toISOString(),
-  skills: Array.isArray(job.skills)
-    ? job.skills
-    : typeof job.skills === "string"
-      ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
-      : [], 
-};
-
+const handlePostJob = async () => {
+  const jobData = {
+    company,
+    position,
+    location,
+    workType,
+    skills: skills.split(",").map(s => s.trim()),
+    education,
+    description,
+    vacancies,
+    salary,
+    expectedYear,
+    postedTime: new Date().toISOString(),
+  };
 
   try {
-    const res = await axios.post(
-      "https://jobportal-backend-xoym.onrender.com/jobs",
-      formattedJobData
-    );
-    console.log("Job posted successfully!", res.data);
-    alert("Job posted successfully!");
+    const res = await axios.post("https://jobportal-backend-xoym.onrender.com/admin/postjob", jobData);
+    alert("✅ Job posted successfully");
 
-    // OPTIONAL: Clear it from local submittedData (if needed)
+    setCompany(""); setPosition(""); setLocation("");
+    setWorkType(""); setSkills(""); setEducation("");
+    setDescription(""); setVacancies(""); setSalary("");
+    setExpectedYear("");
   } catch (err) {
-    console.error("Error posting job:", err);
-    alert("Error posting job. Please try again.");
+    console.error("❌ Error posting job:", err);
+    alert("❌ Failed to post job");
   }
 };
+
 
  
    return (
