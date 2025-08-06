@@ -28,24 +28,50 @@ export default function Home() {
   
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const authenticatedUser = localStorage.getItem("authenticatedUser");
-    if (authenticatedUser) {
-      try {
-        const parsedUser = JSON.parse(authenticatedUser);
-        setUser(parsedUser);
-        setIsAdmin(localStorage.getItem("isAdmin") === "true");
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        setUser(null);
-        navigate("/");
-      }
+ useEffect(() => {
+  // Fetch logged-in user
+  const authenticatedUser = localStorage.getItem("authenticatedUser");
+  if (authenticatedUser) {
+    try {
+      const parsedUser = JSON.parse(authenticatedUser);
+      setUser(parsedUser);
+      setIsAdmin(localStorage.getItem("isAdmin") === "true");
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      setUser(null);
+      navigate("/");
     }
-  
-    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
-    setApplications(storedApplications);
-  
-  }, [navigate]);
+  }
+
+  // Get applications
+  const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
+  setApplications(storedApplications);
+
+  // Get application count and viewed result
+  const count = Number(localStorage.getItem("applicationCount")) || 0;
+  const viewed = localStorage.getItem("hasViewedResults") === "true";
+
+  setApplicationCount(count);
+  setHasViewedResults(viewed);
+
+  // Get saved jobs and not interested jobs
+  const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
+  setSavedJobs(storedSavedJobs);
+
+  const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+  setNotInterestedJobs(storedNotInterested);
+
+  // Fetch jobs from backend
+  axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
+    .then((res) => {
+      console.log("✅ Jobs fetched:", res.data);
+      setJobs(res.data);
+    })
+    .catch((err) => {
+      console.error("❌ Error fetching jobs:", err.message);
+    });
+
+}, [navigate]);
 
   useEffect(() => {
     const count = Number(localStorage.getItem("applicationCount")) || 0;
