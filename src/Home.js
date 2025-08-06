@@ -115,7 +115,7 @@ export default function Home() {
   };
 
 
-  const handleNavigateToSelect = () => navigate("/select");
+  
 
   return (
     <div className="home-container">
