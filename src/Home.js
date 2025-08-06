@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useTheme } from "./ThemeContext";
 import axios from "axios";
 import "./Home.css";
 
 export default function Home() {
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [notInterestedJobs, setNotInterestedJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [applicationCount, setApplicationCount] = useState(0);
   const [hasViewedResults, setHasViewedResults] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -17,53 +21,52 @@ export default function Home() {
 
   const navigate = useNavigate();
 
+  // ✅ Main useEffect to fetch user, jobs, localStorage data
   useEffect(() => {
     const authenticatedUser = localStorage.getItem("authenticatedUser");
     if (authenticatedUser) {
-      setUser(JSON.parse(authenticatedUser));
-    } else {
-      navigate("/");
+      try {
+        const parsedUser = JSON.parse(authenticatedUser);
+        setUser(parsedUser);
+        setIsAdmin(localStorage.getItem("isAdmin") === "true");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        setUser(null);
+        navigate("/");
+      }
     }
 
-    setSavedJobs(JSON.parse(localStorage.getItem("savedJobs")) || []);
-    setNotInterestedJobs(JSON.parse(localStorage.getItem("notInterestedJobs")) || []);
-    setApplicationCount(Number(localStorage.getItem("applicationCount")) || 0);
-    setHasViewedResults(localStorage.getItem("hasViewedResults") === "true");
+    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
+    setApplications(storedApplications);
 
-    // Fetch jobs from backend
+    // ✅ Fetch jobs from backend
     axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
       .then((res) => {
-        console.log("✅ Jobs fetched:", res.data);
+        console.log("✅ Jobs fetched from backend:", res.data);
         setJobs(res.data);
       })
       .catch((err) => {
-        console.error("❌ Failed to fetch jobs:", err.message);
+        console.error("❌ Error fetching jobs:", err);
       });
+
+    // ✅ Load saved and not interested jobs
+    const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
+    setSavedJobs(storedSavedJobs);
+
+    const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+    setNotInterestedJobs(storedNotInterested);
   }, [navigate]);
 
-  const toggleSaveJob = (job) => {
-    const updated = [...savedJobs];
-    const exists = savedJobs.find(
-      (j) => j.position === job.position && j.company === job.company
-    );
+  // ✅ Load application count and result view state
+  useEffect(() => {
+    const count = Number(localStorage.getItem("applicationCount")) || 0;
+    const viewed = localStorage.getItem("hasViewedResults") === "true";
+    setApplicationCount(count);
+    setHasViewedResults(viewed);
+  }, []);
 
-    if (exists) {
-      const filtered = updated.filter(
-        (j) => !(j.position === job.position && j.company === job.company)
-      );
-      setSavedJobs(filtered);
-      localStorage.setItem("savedJobs", JSON.stringify(filtered));
-    } else {
-      updated.push(job);
-      setSavedJobs(updated);
-      localStorage.setItem("savedJobs", JSON.stringify(updated));
-    }
-  };
-
-  const isJobSaved = (job) => {
-    return savedJobs.some(
-      (j) => j.position === job.position && j.company === job.company
-    );
+  const handleNavigateToSelect = () => {
+    navigate("/select");
   };
 
   const handleNotInterested = (jobId) => {
@@ -72,20 +75,45 @@ export default function Home() {
     localStorage.setItem("notInterestedJobs", JSON.stringify(updated));
   };
 
+  const toggleSaveJob = (job) => {
+    let updatedSavedJobs = [...savedJobs];
+    const jobIndex = savedJobs.findIndex(
+      (saved) => saved.position === job.position && saved.company === job.company
+    );
+
+    if (jobIndex === -1) {
+      updatedSavedJobs.push(job);
+    } else {
+      updatedSavedJobs.splice(jobIndex, 1);
+    }
+
+    setSavedJobs(updatedSavedJobs);
+    localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
+  };
+
+  const isJobSaved = (job) =>
+    savedJobs.some(
+      (saved) => saved.position === job.position && saved.company === job.company
+    );
+
   const handleLogout = async () => {
     try {
-      const res = await axios.get("https://randomuser.me/api/");
-      setRandomUser(res.data.results[0]);
+      const response = await axios.get("https://randomuser.me/api/");
+      const userData = response.data.results[0];
+      setRandomUser(userData);
       setShowLogoutModal(true);
-    } catch (err) {
-      console.error("Error fetching random user:", err.message);
+    } catch (error) {
+      console.error("Error fetching random user:", error);
     }
   };
 
   const confirmLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("authenticatedUser");
+    localStorage.removeItem("isAdmin");
+    localStorage.removeItem("savedJobs");
     navigate("/");
   };
+
 
   const handleNavigateToSelect = () => navigate("/select");
 
