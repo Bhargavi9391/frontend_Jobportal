@@ -109,34 +109,32 @@ export default function Admin() {
     setJobData({ ...submittedData[index] });
     setEditingIndex(index);
   };
-
-  const handlePostJob = async (job) => {
+const handlePostJob = async (job) => {
   const formattedJobData = {
-  ...job,
-  postedTime: new Date().toISOString(),
-  expectedYear: Number(job.expectedYear),  
-  vacancies: Number(job.vacancies),      
-  skills: Array.isArray(job.skills)
-    ? job.skills
-    : typeof job.skills === "string"
-      ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
-      : [],
+    ...job,
+    postedTime: new Date().toISOString(),
+    expectedYear: Number(job.expectedYear),
+    vacancies: Number(job.vacancies),
+    skills: Array.isArray(job.skills)
+      ? job.skills
+      : typeof job.skills === "string"
+        ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
+        : [],
+  };
+
+  try {
+    const res = await axios.post(
+      "https://jobportal-backend-xoym.onrender.com/jobs",
+      formattedJobData
+    );
+    alert("Job posted successfully!");
+    window.location.href = "/home";
+  } catch (err) {
+    console.error("Error posting job:", err.response?.data || err.message);
+    alert("Error posting job: " + (err.response?.data?.message || err.message));
+  }
 };
 
-
-
-    try {
-      const res = await axios.post(
-        "https://jobportal-backend-xoym.onrender.com/jobs",
-        formattedJobData
-      );
-      console.log("Job posted successfully!", res.data);
-      alert("Job posted successfully!");
-    } catch (err) {
-      console.error("Error posting job:", err);
-      alert("Error posting job. Please try again.");
-    }
-  };
  
    return (
      <div className="admin-container">
