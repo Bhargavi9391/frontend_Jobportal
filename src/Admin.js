@@ -56,15 +56,16 @@ export default function Admin() {
     }));
   };
 
-  const handleSkillsChange = (e) => {
-    const selectedSkill = e.target.value;
-    if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
-      setJobData((prevData) => ({
-        ...prevData,
-        skills: [...prevData.skills, selectedSkill]
-      }));
-    }
-  };
+ const handleSkillsChange = (e) => {
+  const selectedSkill = e.target.value;
+  if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
+    setJobData((prevData) => ({
+      ...prevData,
+      skills: [...prevData.skills, selectedSkill]
+    }));
+  }
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -114,7 +115,7 @@ const handlePostJob = async (job) => {
     ...job,
     postedTime: new Date().toISOString(),
     expectedYear: Number(job.expectedYear),
-    vacancies: Number(job.vacancies),
+    vacancies: Number(job.vacancies||0),
     skills: Array.isArray(job.skills)
       ? job.skills
       : typeof job.skills === "string"
