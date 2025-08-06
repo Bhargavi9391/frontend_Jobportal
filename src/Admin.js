@@ -111,17 +111,18 @@ export default function Admin() {
   };
 
   const handlePostJob = async (job) => {
-   const formattedJobData = {
+  const formattedJobData = {
   ...job,
   postedTime: new Date().toISOString(),
-  expectedYear: Number(job.expectedYear),
-  vacancies: Number(job.vacancies),
+  expectedYear: Number(job.expectedYear),  
+  vacancies: Number(job.vacancies),      
   skills: Array.isArray(job.skills)
     ? job.skills
     : typeof job.skills === "string"
       ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
       : [],
 };
+
 
 
     try {
