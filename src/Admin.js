@@ -111,15 +111,18 @@ export default function Admin() {
   };
 
   const handlePostJob = async (job) => {
-    const formattedJobData = {
-      ...job,
-      postedTime: new Date().toISOString(),
-      skills: Array.isArray(job.skills)
-        ? job.skills
-        : typeof job.skills === "string"
-          ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
-          : [],
-    };
+   const formattedJobData = {
+  ...job,
+  postedTime: new Date().toISOString(),
+  expectedYear: Number(job.expectedYear),
+  vacancies: Number(job.vacancies),
+  skills: Array.isArray(job.skills)
+    ? job.skills
+    : typeof job.skills === "string"
+      ? job.skills.split(',').map(s => s.trim()).filter(Boolean)
+      : [],
+};
+
 
     try {
       const res = await axios.post(
