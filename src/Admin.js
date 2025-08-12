@@ -33,18 +33,18 @@
       }
     }, [submittedData]);
   
-    const jobDescriptions = {
-      "Software Engineer": "Designs, develops, and optimizes software applications...",
-      "Frontend Developer": "Builds responsive interfaces using modern frontend technologies...",
-      "Backend Developer": "Handles business logic, databases, and API development...",
-      "Full Stack Developer": "Combines frontend and backend development...",
-      "DevOps Engineer": "Automates CI/CD pipelines, manages infrastructure...",
-      "Data Scientist": "Processes and analyzes data to extract insights...",
-      "Machine Learning Engineer": "Builds and deploys ML models...",
-      "Cyber Security Analyst": "Protects systems from threats...",
-      "Cloud Engineer": "Manages cloud-based infrastructure...",
-      "UI/UX Designer": "Designs intuitive and attractive user interfaces..."
-    };
+   const jobDescriptions = {
+    "Software Engineer": "Designs, develops, and optimizes software applications. Requires strong programming skills, problem-solving abilities, and knowledge of data structures, algorithms, and software development methodologies.",
+    "Frontend Developer": "Builds responsive, dynamic, and user-friendly interfaces using modern frontend technologies like React, Angular, or Vue. Requires expertise in HTML, CSS, JavaScript, state management (Redux/Zustand), and UI/UX principles.",
+    "Backend Developer": "Handles business logic, databases, and API development. Requires proficiency in server-side technologies like Node.js, Python, or Java, database management (SQL/NoSQL), authentication, and REST/GraphQL APIs.",
+    "Full Stack Developer": "Combines frontend and backend development to create complete web applications. Requires expertise in MERN stack (MongoDB, Express.js, React.js, Node.js) or similar, DevOps basics, cloud deployment, and database management.",
+    "DevOps Engineer": "Automates development, testing, and deployment pipelines. Requires knowledge of CI/CD tools (Jenkins, GitHub Actions), cloud platforms (AWS, Azure, GCP), Kubernetes, Docker, Linux, and scripting languages like Bash or Python.",
+    "Data Scientist": "Processes and analyzes large datasets to extract meaningful insights. Requires proficiency in Python, R, SQL, machine learning algorithms, statistical analysis, data visualization, and tools like TensorFlow and Pandas.",
+    "Machine Learning Engineer": "Builds, trains, and deploys machine learning models for automation and AI applications. Requires expertise in deep learning, natural language processing (NLP), computer vision, and ML frameworks like PyTorch or TensorFlow.",
+    "Cyber Security Analyst": "Protects systems, networks, and data from security threats. Requires skills in ethical hacking, penetration testing, encryption, network security, SIEM tools, and cybersecurity frameworks like NIST and OWASP.",
+    "Cloud Engineer": "Designs and manages cloud-based solutions for scalability and security. Requires expertise in AWS, Azure, or Google Cloud, containerization (Docker, Kubernetes), cloud networking, and infrastructure as code (Terraform).",
+    "UI/UX Designer": "Creates visually appealing and user-friendly digital experiences. Requires skills in wireframing, prototyping, Figma, Adobe XD, usability testing, user research, accessibility, and responsive design principles."
+  };
   
     const handleChange = (e) => {
       const { name, value } = e.target;
