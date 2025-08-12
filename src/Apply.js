@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Apply.css";
 
+
 export default function Apply() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,7 +46,6 @@ export default function Apply() {
     linkedin: "",
     location: "",
     resumeFileName: "",
-    manualSkills: "",
   });
 
   const handleClick = (index, event) => {
@@ -91,17 +91,6 @@ export default function Apply() {
         level: skill.percentage,
       }));
 
-    const manualSkillsArray = formData.manualSkills
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    // Merge manual skills with selected skills
-    const allSkills = [
-      ...selectedSkills,
-      ...manualSkillsArray.map((name) => ({ name, level: "manual" })),
-    ];
-
     const newDetailedApplication = {
       jobTitle: job.position,
       company: job.company,
@@ -115,8 +104,7 @@ export default function Apply() {
       linkedin: formData.linkedin,
       location: formData.location,
       resume: formData.resumeFileName,
-      skills: allSkills, // merged skills here
-      manualSkills: manualSkillsArray,
+      skills: selectedSkills,
       requiredSkills: job.skills || [],
     };
 
@@ -128,12 +116,8 @@ export default function Apply() {
     };
 
     try {
-      const existingApplications =
-        JSON.parse(localStorage.getItem("applications")) || [];
-      const updatedApplications = [
-        ...existingApplications,
-        { ...newDetailedApplication, ...simplifiedApplication },
-      ];
+      const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
+      const updatedApplications = [...existingApplications, { ...newDetailedApplication, ...simplifiedApplication }];
       localStorage.setItem("applications", JSON.stringify(updatedApplications));
       localStorage.setItem("applicationCount", updatedApplications.length);
       localStorage.setItem("hasViewedResults", "false");
@@ -148,82 +132,37 @@ export default function Apply() {
 
   return (
     <div className="apply-container">
-      <h2>
-        Apply for {job.position} at {job.company}
-      </h2>
+      <h2>Apply for {job.position} at {job.company}</h2>
       <form className="apply-form" onSubmit={handleSubmit}>
         <label>First Name *</label>
-        <input
-          type="text"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
+        <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
 
         <label>Last Name *</label>
-        <input
-          type="text"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
+        <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
 
         <label>Graduation Year *</label>
-        <input
-          type="number"
-          name="graduationYear"
-          value={formData.graduationYear}
-          onChange={handleChange}
-          required
-        />
+        <input type="number" name="graduationYear" value={formData.graduationYear} onChange={handleChange} required />
 
         <label>CGPA *</label>
-        <input
-          type="text"
-          name="cgpa"
-          value={formData.cgpa}
-          onChange={handleChange}
-          required
-        />
+        <input type="text" name="cgpa" value={formData.cgpa} onChange={handleChange} required />
 
         <label>LinkedIn Profile *</label>
-        <input
-          type="url"
-          name="linkedin"
-          value={formData.linkedin}
-          onChange={handleChange}
-          required
-        />
+        <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} required />
 
         <label>Upload Resume (PDF) *</label>
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileChange}
-          required
-        />
+        <input type="file" accept=".pdf" onChange={handleFileChange} required />
 
         <label>Current Location *</label>
-        <input
-          type="text"
-          name="location"
-          value={formData.location}
-          onChange={handleChange}
-          required
-        />
+        <input type="text" name="location" value={formData.location} onChange={handleChange} required />
 
+        {/* Skill Percentage Feature (Only required skills shown) */}
         <div className="skill-section">
           <label>Set Your Skill Levels *</label>
           <div className="container">
             {skills.map((skill, index) => (
               <div key={skill.name} className="skill-row">
                 <div className="skill-name">{skill.name}</div>
-                <div
-                  className="progress-bar"
-                  onClick={(e) => handleClick(index, e)}
-                >
+                <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
                   <div
                     className="progress"
                     style={{
@@ -240,19 +179,9 @@ export default function Apply() {
           </div>
         </div>
 
-        <label>Enter Your Skills Manually (comma-separated)</label>
-        <input
-          type="text"
-          name="manualSkills"
-          value={formData.manualSkills}
-          onChange={handleChange}
-          placeholder="e.g. HTML, CSS, JavaScript"
-        />
-
-        <button type="submit" className="submit-btn">
-          Submit
-        </button>
+        <button type="submit" className="submit-btn">Submit</button>
       </form>
     </div>
   );
 }
+
