@@ -22,45 +22,41 @@ export default function Select() {
 
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(job =>
-      job.position?.trim().toLowerCase() === application.jobTitle?.trim().toLowerCase() &&
-      job.company?.trim().toLowerCase() === application.company?.trim().toLowerCase()
+      job.position === application.jobTitle &&
+      job.company === application.company
     );
 
-    if (!matchedJob) {
-      return {
-        message: "❌ Job not found",
-        followUp: "",
-        reasons: ["This job no longer exists in admin postings."],
-        suggestions: ["Check for similar job openings in the portal."]
-      };
-    }
+    if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
 
     const reasons = [];
     const suggestions = [];
 
-    // CGPA Check
     if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
       reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
-      suggestions.push("Consider improving your CGPA through additional courses or certifications.");
+      suggestions.push("Consider improving your CGPA through additional courses.");
     }
 
-    // Graduation Year Check
     const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
     if (application.graduationYear !== requiredYear) {
       reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
-      suggestions.push("Apply to roles that align with your graduation timeline.");
+      suggestions.push("Apply to roles that match your timeline.");
     }
 
-    // Skills Check (case-insensitive)
-    const normalize = str => str.trim().toLowerCase();
-    const applicationSkills = (application.skills || []).map(normalize);
-    const requiredSkills = (matchedJob.skills || []).map(normalize);
+    // Fix: safely normalize skill names as strings
+    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
-    const missingSkills = requiredSkills.filter(skill => !applicationSkills.includes(skill));
+    const applicationSkills = application.skills || [];
+    // Extract skill names from application skills objects, then normalize
+    const applicationSkillNames = applicationSkills.map(skill => normalize(skill.name));
+
+    // Normalize required skills from matchedJob.skills and check missing
+    const missingSkills = matchedJob.skills.filter(skill =>
+      !applicationSkillNames.includes(normalize(skill))
+    );
 
     if (missingSkills.length > 0) {
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
-      suggestions.push("Learn these skills via platforms like Udemy, Coursera, or LinkedIn Learning.");
+      suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
     }
 
     if (reasons.length === 0) {
