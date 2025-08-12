@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
 import './Select.css';
 
-
 export default function Select() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
@@ -18,43 +17,50 @@ export default function Select() {
   }, []);
 
   useEffect(() => {
-  
     localStorage.setItem("hasViewedResults", "true");
   }, []);
-  
-
 
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(job =>
-      job.position === application.jobTitle &&
-      job.company === application.company
+      job.position?.trim().toLowerCase() === application.jobTitle?.trim().toLowerCase() &&
+      job.company?.trim().toLowerCase() === application.company?.trim().toLowerCase()
     );
 
-    if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
+    if (!matchedJob) {
+      return {
+        message: "❌ Job not found",
+        followUp: "",
+        reasons: ["This job no longer exists in admin postings."],
+        suggestions: ["Check for similar job openings in the portal."]
+      };
+    }
 
     const reasons = [];
     const suggestions = [];
 
+    // CGPA Check
     if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
       reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
-      suggestions.push("Consider improving your CGPA through additional courses.");
+      suggestions.push("Consider improving your CGPA through additional courses or certifications.");
     }
 
+    // Graduation Year Check
     const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
     if (application.graduationYear !== requiredYear) {
       reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
-      suggestions.push("Apply to roles that match your timeline.");
+      suggestions.push("Apply to roles that align with your graduation timeline.");
     }
 
+    // Skills Check (case-insensitive)
     const normalize = str => str.trim().toLowerCase();
-    const applicationSkills = application.skills || [];
-    const missingSkills = matchedJob.skills.filter(skill =>
-      !applicationSkills.map(normalize).includes(normalize(skill))
-    );
+    const applicationSkills = (application.skills || []).map(normalize);
+    const requiredSkills = (matchedJob.skills || []).map(normalize);
+
+    const missingSkills = requiredSkills.filter(skill => !applicationSkills.includes(skill));
 
     if (missingSkills.length > 0) {
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
-      suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
+      suggestions.push("Learn these skills via platforms like Udemy, Coursera, or LinkedIn Learning.");
     }
 
     if (reasons.length === 0) {
