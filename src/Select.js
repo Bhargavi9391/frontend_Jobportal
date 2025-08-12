@@ -21,10 +21,10 @@ export default function Select() {
   }, []);
 
   const getResultMessage = (application) => {
-    const matchedJob = adminJobs.find(job =>
-      job.position === application.jobTitle &&
-      job.company === application.company
-    );
+   const matchedJob = adminJobs.find(job =>
+  job.position.trim().toLowerCase() === application.jobTitle.trim().toLowerCase() &&
+  job.company.trim().toLowerCase() === application.company.trim().toLowerCase()
+);
 
     if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
 
