@@ -129,7 +129,7 @@ const handlePostJob = async (job) => {
       formattedJobData
     );
     alert("Job posted successfully!");
-    window.location.href = "/home";
+   
   } catch (err) {
     console.error("Error posting job:", err.response?.data || err.message);
     alert("Error posting job: " + (err.response?.data?.message || err.message));
