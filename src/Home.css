@@ -212,10 +212,26 @@
 }
 
 .notification {
-  position: absolute;
-  top: 26px;
-  left: 770px;
-  transform: translateX(870%);
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 128, 255, 0.4); /* Semi-transparent blue */
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari */
+  font-weight: bold;
+  font-size: 14px;
+  z-index: 9999;
+  animation: fadeInOut 3s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
 }
 
 .application-count {
@@ -231,6 +247,7 @@
   font-weight: bold;
   text-align: center;
 }
+
 
 .email-icon-wrapper {
   position: relative;
