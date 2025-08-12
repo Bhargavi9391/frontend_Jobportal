@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Apply.css";
 
-
 export default function Apply() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,6 +45,7 @@ export default function Apply() {
     linkedin: "",
     location: "",
     resumeFileName: "",
+    manualSkills: "",  // <-- Add manualSkills here
   });
 
   const handleClick = (index, event) => {
@@ -91,6 +91,12 @@ export default function Apply() {
         level: skill.percentage,
       }));
 
+    // Process manual skills as an array (split by comma and trim)
+    const manualSkillsArray = formData.manualSkills
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
     const newDetailedApplication = {
       jobTitle: job.position,
       company: job.company,
@@ -105,6 +111,7 @@ export default function Apply() {
       location: formData.location,
       resume: formData.resumeFileName,
       skills: selectedSkills,
+      manualSkills: manualSkillsArray,
       requiredSkills: job.skills || [],
     };
 
@@ -155,7 +162,6 @@ export default function Apply() {
         <label>Current Location *</label>
         <input type="text" name="location" value={formData.location} onChange={handleChange} required />
 
-        {/* Skill Percentage Feature (Only required skills shown) */}
         <div className="skill-section">
           <label>Set Your Skill Levels *</label>
           <div className="container">
@@ -178,6 +184,15 @@ export default function Apply() {
             ))}
           </div>
         </div>
+
+        <label>Enter Your Skills Manually (comma-separated)</label>
+        <input
+          type="text"
+          name="manualSkills"
+          value={formData.manualSkills}
+          onChange={handleChange}
+          placeholder="e.g. HTML, CSS, JavaScript"
+        />
 
         <button type="submit" className="submit-btn">Submit</button>
       </form>
