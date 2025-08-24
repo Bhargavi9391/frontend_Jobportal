@@ -67,40 +67,76 @@
   };
   
   
-    const handleSubmit = (e) => {
-      e.preventDefault();
+    // const handleSubmit = (e) => {
+    //   e.preventDefault();
   
-      if (!jobData.position || !jobData.company) {
-        alert("Please fill in required fields.");
-        return;
-      }
+    //   if (!jobData.position || !jobData.company) {
+    //     alert("Please fill in required fields.");
+    //     return;
+    //   }
   
-      let updatedData = [...submittedData];
+    //   let updatedData = [...submittedData];
   
-      if (editingIndex !== null) {
-        updatedData[editingIndex] = { ...jobData };
-      } else {
-        updatedData.push(jobData);
-      }
+    //   if (editingIndex !== null) {
+    //     updatedData[editingIndex] = { ...jobData };
+    //   } else {
+    //     updatedData.push(jobData);
+    //   }
   
-      setSubmittedData(updatedData);
-      setEditingIndex(null);
+    //   setSubmittedData(updatedData);
+    //   setEditingIndex(null);
   
-      // Clear form
-      setJobData({
-        position: "",
-        company: "",
-        location: "",
-        workType: "",
-        expectedYear: "",
-        description: "",
-        vacancies: "",
-        salary: "",
-        skills: [],
-        education: ""
-      });
-    };
-  
+    //   // Clear form
+    //   setJobData({
+    //     position: "",
+    //     company: "",
+    //     location: "",
+    //     workType: "",
+    //     expectedYear: "",
+    //     description: "",
+    //     vacancies: "",
+    //     salary: "",
+    //     skills: [],
+    //     education: ""
+    //   });
+    // };
+  const handleSubmit = (e) => {
+  e.preventDefault();
+
+  if (!jobData.position || !jobData.company) {
+    alert("Please fill in required fields.");
+    return;
+  }
+
+  let updatedData = [...submittedData];
+
+  if (editingIndex !== null) {
+    updatedData[editingIndex] = { ...jobData };
+  } else {
+    updatedData.push(jobData);
+  }
+
+  setSubmittedData(updatedData);
+  setEditingIndex(null);
+
+  // 🚀 Auto-post job to backend
+  handlePostJob(jobData);
+
+  // Clear form
+  setJobData({
+    position: "",
+    company: "",
+    location: "",
+    workType: "",
+    expectedYear: "",
+    description: "",
+    vacancies: "",
+    salary: "",
+    skills: [],
+    education: ""
+  });
+};
+
     const handleDelete = (index) => {
       const updatedJobs = submittedData.filter((_, i) => i !== index);
       setSubmittedData(updatedJobs);
