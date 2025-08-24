@@ -1,199 +1,190 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaBookmark, FaRegBookmark } from "react-icons/fa";
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import axios from "axios";
-import "./Home.css";
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import "./Apply.css";
 
-export default function Home() {
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [jobs, setJobs] = useState([]);
-  const [savedJobs, setSavedJobs] = useState([]);
-  const [notInterestedJobs, setNotInterestedJobs] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [applicationCount, setApplicationCount] = useState(0);
-  const [hasViewedResults, setHasViewedResults] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [randomUser, setRandomUser] = useState(null);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
-
+export default function Apply() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const job = location.state?.job || {};
 
-  // Load user and localStorage data
-  useEffect(() => {
-    const authenticatedUser = localStorage.getItem("authenticatedUser");
-    if (authenticatedUser) {
-      try {
-        const parsedUser = JSON.parse(authenticatedUser);
-        setUser(parsedUser);
-        setIsAdmin(localStorage.getItem("isAdmin") === "true");
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        setUser(null);
-        navigate("/");
-      }
-    }
+  const initialSkills = [
+    { name: "HTML", percentage: 0, color: "#ff6f61" },
+    { name: "CSS", percentage: 0, color: "#1dd1a1" },
+    { name: "JavaScript", percentage: 0, color: "#feca57" },
+    { name: "React", percentage: 0, color: "#48dbfb" },
+    { name: "Node.js", percentage: 0, color: "#ffa502" },
+    { name: "Python", percentage: 0, color: "#5f27cd" },
+    { name: "Java", percentage: 0, color: "#d63031" },
+    { name: "C++", percentage: 0, color: "#576574" },
+    { name: "SQL", percentage: 0, color: "#ff9ff3" },
+    { name: "MySQL", percentage: 0, color: "#00d2d3" },
+  ];
 
-    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
-    setApplications(storedApplications);
-
-    const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
-    setSavedJobs(storedSavedJobs);
-
-    const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
-    setNotInterestedJobs(storedNotInterested);
-
-    // Fetch jobs from backend
-    axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
-      .then(res => setJobs(res.data))
-      .catch(err => console.error("Error fetching jobs:", err));
-  }, [navigate]);
-
-  // Load application count and results viewed status
-  useEffect(() => {
-    const count = Number(localStorage.getItem("applicationCount")) || 0;
-    const viewed = localStorage.getItem("hasViewedResults") === "true";
-    setApplicationCount(count);
-    setHasViewedResults(viewed);
-  }, []);
-
-  // Navigation handlers
-  const handleNavigateToSelect = () => navigate("/select");
-
-  // Job interaction handlers
-  const handleNotInterested = (jobId) => {
-    const updated = [...notInterestedJobs, jobId];
-    setNotInterestedJobs(updated);
-    localStorage.setItem("notInterestedJobs", JSON.stringify(updated));
+  const generateColor = (name) => {
+    const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 60%)`;
   };
 
-  const toggleSaveJob = (job) => {
-    let updatedSavedJobs = [...savedJobs];
-    const jobIndex = savedJobs.findIndex(
-      saved => saved.position === job.position && saved.company === job.company
-    );
-
-    if (jobIndex === -1) {
-      updatedSavedJobs.push(job);
-    } else {
-      updatedSavedJobs.splice(jobIndex, 1);
-    }
-
-    setSavedJobs(updatedSavedJobs);
-    localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
-  };
-
-  const isJobSaved = (job) => savedJobs.some(
-    saved => saved.position === job.position && saved.company === job.company
+  const requiredSkillNames = job.skills || [];
+  const [skills, setSkills] = useState(
+    requiredSkillNames.map((skillName) => {
+      const existing = initialSkills.find((s) => s.name === skillName);
+      return existing
+        ? { ...existing }
+        : { name: skillName, percentage: 0, color: generateColor(skillName) };
+    })
   );
 
-  // Logout handlers
-  const handleLogout = async () => {
-    try {
-      const response = await axios.get("https://randomuser.me/api/");
-      setRandomUser(response.data.results[0]);
-      setShowLogoutModal(true);
-    } catch (error) {
-      console.error("Error fetching random user:", error);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    graduationYear: "",
+    cgpa: "",
+    linkedin: "",
+    location: "",
+    resumeFileName: "",
+    manualSkills: "",
+  });
+
+  const handleClick = (index, event) => {
+    const progressBarWidth = event.target.offsetWidth;
+    const clickPosition = event.nativeEvent.offsetX;
+    const newPercentage = Math.round((clickPosition / progressBarWidth) * 100);
+    const updatedSkills = [...skills];
+    updatedSkills[index].percentage = newPercentage;
+    setSkills(updatedSkills);
+  };
+
+  if (!job.position || !job.company) {
+    return (
+      <div className="apply-container">
+        <h2>Error: Job details are missing!</h2>
+        <p>Please go back to the job listing and try again.</p>
+      </div>
+    );
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      setFormData((prevData) => ({ ...prevData, resumeFileName: file.name }));
+    } else {
+      alert("Please upload a valid PDF file for the resume.");
     }
   };
 
-  const confirmLogout = () => {
-    localStorage.removeItem("authenticatedUser");
-    localStorage.removeItem("isAdmin");
-    localStorage.removeItem("savedJobs");
-    navigate("/");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const selectedSkills = skills
+      .filter((skill) => skill.percentage > 0)
+      .map((skill) => ({ name: skill.name, level: skill.percentage }));
+
+    const manualSkillsArray = formData.manualSkills
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    const newDetailedApplication = {
+      jobTitle: job.position,
+      company: job.company,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      graduationYear: formData.graduationYear,
+      expectedYear: job.expectedYear || "",
+      education: "M.Tech",
+      requiredEducation: job.education || "",
+      cgpa: formData.cgpa,
+      linkedin: formData.linkedin,
+      location: formData.location,
+      resume: formData.resumeFileName,
+      skills: selectedSkills,
+      manualSkills: manualSkillsArray,
+      requiredSkills: job.skills || [],
+    };
+
+    const simplifiedApplication = {
+      jobId: job.id,
+      position: job.position,
+      company: job.company,
+      appliedAt: new Date().toISOString(),
+    };
+
+    try {
+      const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
+      const updatedApplications = [
+        ...existingApplications,
+        { ...newDetailedApplication, ...simplifiedApplication },
+      ];
+      localStorage.setItem("applications", JSON.stringify(updatedApplications));
+      localStorage.setItem("applicationCount", updatedApplications.length);
+      localStorage.setItem("hasViewedResults", "false");
+      alert("Application submitted successfully!");
+      navigate("/submissions");
+    } catch (err) {
+      alert("Error saving your application. Storage limit might be exceeded.");
+      console.error(err);
+    }
   };
 
   return (
-    <div className="home-container">
-      <nav className="navbar">
-        <div className="logo-container">
-          <h1 className="brand-title">✨Career<span className="highlight">Crafter</span></h1>
-        </div>
+    <div className="apply-container">
+      <h2>Apply for {job.position} at {job.company}</h2>
+      <form className="apply-form" onSubmit={handleSubmit}>
+        <label>First Name *</label>
+        <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
 
-        <div className="notification">
-          {!hasViewedResults && <p className="application-count">{applicationCount}</p>}
-        </div>
+        <label>Last Name *</label>
+        <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
 
-        <ul className="nav-links">
-          <li onClick={() => navigate("/home")}>Home</li>
-          <li onClick={() => navigate("/companies")}>Companies</li>
-          <li onClick={() => navigate("/savedjobs")}>Saved Jobs</li>
-          <li onClick={() => navigate("/submissions")}>Submissions</li>
-          <li onClick={handleNavigateToSelect}>Results</li>
-          <li className="more-link" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-            More
-            {showMoreMenu && (
-              <ul className="dropdown-menu">
-                <li onClick={() => navigate("/more")}>Support</li>
-              </ul>
-            )}
-          </li>
-          <div className="email-icon-wrapper">
-            <a href="mailto:owner@gmail.com?subject=Query" target="_blank" rel="noopener noreferrer">
-              <span className="email-icon">📧</span>
-            </a>
-            <div className="tooltip2">If you have any queries, email the admin.</div>
-          </div>
-        </ul>
+        <label>Graduation Year *</label>
+        <input type="number" name="graduationYear" value={formData.graduationYear} onChange={handleChange} required />
 
-        <div className="logout-avatar" onClick={handleLogout}>
-          {user?.email?.charAt(0)?.toUpperCase() || "U"}
-        </div>
-      </nav>
+        <label>CGPA *</label>
+        <input type="text" name="cgpa" value={formData.cgpa} onChange={handleChange} required />
 
-      {jobs.length > 0 ? (
-        <div className="job-list">
-          {jobs
-            .filter(job => !notInterestedJobs.includes(job._id))
-            .map((job, idx) => (
-              <div key={idx} className="job-card">
-                <p>Posted: {new Date(job.postedTime).toLocaleString()}</p>
-                <h3>{job.position} at {job.company}</h3>
-                <p><strong>Location:</strong> {job.location}</p>
-                <p><strong>Work Type:</strong> {job.workType}</p>
-                <p><strong>Skills:</strong>
-                  <ul>
-                    {Array.isArray(job.skills) ? job.skills.map((skill, i) => <li key={i}>{skill}</li>) : <li>None</li>}
-                  </ul>
-                </p>
-                <p><strong>Education:</strong> {job.education}</p>
-                <p><strong>Description:</strong> {job.description}</p>
-                <p><strong>Vacancies:</strong> {job.vacancies}</p>
-                <p><strong>Salary:</strong> {job.salary}</p>
-                <p><strong>Expected Year:</strong> {job.expectedYear}</p>
+        <label>LinkedIn Profile *</label>
+        <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} required />
 
-                <div className="job-actions">
-                  <button className="save-btn" onClick={() => toggleSaveJob(job)}>
-                    {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
-                  </button>
-                  <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
-                    Apply
-                  </button>
-                  <button className="not-interested-btn" onClick={() => handleNotInterested(job._id)}>
-                    ❌ Not Interested
-                  </button>
+        <label>Upload Resume (PDF) *</label>
+        <input type="file" accept=".pdf" onChange={handleFileChange} required />
+
+        <label>Current Location *</label>
+        <input type="text" name="location" value={formData.location} onChange={handleChange} required />
+
+        <div className="skill-section">
+          <label>Set Your Skill Levels *</label>
+          <div className="container">
+            {skills.map((skill, index) => (
+              <div key={skill.name} className="skill-row">
+                <div className="skill-name">{skill.name}</div>
+                <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
+                  <div className="progress" style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }} />
                 </div>
+                <div className="percentage">{skill.percentage === 0 ? "" : `${skill.percentage}%`}</div>
               </div>
             ))}
-        </div>
-      ) : (
-        <p className="no-jobs">No jobs available.</p>
-      )}
-
-      {showLogoutModal && (
-        <div className="logout-modal">
-          <div className="modal-content">
-            <h3>Confirm Logout</h3>
-            <p><strong>Email:</strong> {user?.email || "N/A"}</p>
-            {randomUser && <img src={randomUser.picture.medium} alt="User" />}
-            <button className="logout-btn" onClick={confirmLogout}>Logout</button>
-            <button className="cancel-btn" onClick={() => setShowLogoutModal(false)}>Cancel</button>
           </div>
         </div>
-      )}
+
+        <label>Enter Your Skills Manually (comma-separated)</label>
+        <input
+          type="text"
+          name="manualSkills"
+          value={formData.manualSkills}
+          onChange={handleChange}
+          placeholder="e.g. HTML, CSS, JavaScript"
+        />
+
+        <button type="submit" className="submit-btn">Submit</button>
+      </form>
     </div>
   );
 }
+
