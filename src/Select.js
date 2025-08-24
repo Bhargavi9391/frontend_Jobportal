@@ -1,68 +1,153 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
+import './Select.css';
 
-const Select = () => {
+export default function Select() {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [shortlisted, setShortlisted] = useState([]);
+  const [adminJobs, setAdminJobs] = useState([]);
 
   useEffect(() => {
-    const savedApplications =
-      JSON.parse(localStorage.getItem("applications")) || [];
-    const savedJobs = JSON.parse(localStorage.getItem("jobs")) || [];
-    setApplications(savedApplications);
-    setJobs(savedJobs);
+    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
+    const storedAdminJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
 
-    const matches = savedApplications.map((application) => {
-      const normalize = (str) => (str || "").toString().trim().toLowerCase();
-
-      const matchedJob = savedJobs.find(
-        (job) =>
-          normalize(application.jobTitle) === normalize(job.position) &&
-          normalize(application.company) === normalize(job.company)
-      );
-
-      if (!matchedJob) {
-        return { ...application, status: "❌ Job not found" };
-      }
-
-      // Graduation year check
-      if (Number(application.graduationYear) !== Number(matchedJob.expectedYear)) {
-        return { ...application, status: "❌ Year mismatch" };
-      }
-
-      // Education check
-      if (normalize(application.education) !== normalize(matchedJob.education)) {
-        return { ...application, status: "❌ Education mismatch" };
-      }
-
-      // Skills check: must include all required job skills
-      const hasAllSkills = matchedJob.skills.every((skill) =>
-        application.skills?.includes(skill)
-      );
-
-      if (hasAllSkills) {
-        return { ...application, status: "✅ Shortlisted" };
-      } else {
-        return { ...application, status: "❌ Skills mismatch" };
-      }
-    });
-
-    setShortlisted(matches);
+    setApplications(storedApplications);
+    setAdminJobs(storedAdminJobs);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("hasViewedResults", "true");
+  }, []);
+
+  const getResultMessage = (application) => {
+    const matchedJob = adminJobs.find(job =>
+      job.position === application.jobTitle &&
+      job.company === application.company
+    );
+
+    if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
+
+    const reasons = [];
+    const suggestions = [];
+
+    if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
+      reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
+      suggestions.push("Consider improving your CGPA through additional courses.");
+    }
+
+    const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
+    if (application.graduationYear !== requiredYear) {
+      reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
+      suggestions.push("Apply to roles that match your timeline.");
+    }
+
+    // Fix: safely normalize skill names as strings
+    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+
+    const applicationSkills = application.skills || [];
+    // Extract skill names from application skills objects, then normalize
+    const applicationSkillNames = applicationSkills.map(skill => normalize(skill.name));
+
+    // Normalize required skills from matchedJob.skills and check missing
+    const missingSkills = matchedJob.skills.filter(skill =>
+      !applicationSkillNames.includes(normalize(skill))
+    );
+
+    if (missingSkills.length > 0) {
+      reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
+      suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
+    }
+
+    if (reasons.length === 0) {
+      return {
+        message: "✅ You are selected! 🎉",
+        followUp: "Details will be shared soon. Check your email regularly!",
+        reasons: [],
+        suggestions: []
+      };
+    } else {
+      return {
+        message: "❌ Unfit for this job",
+        followUp: "Don’t be discouraged. Improve and try again!",
+        reasons,
+        suggestions
+      };
+    }
+  };
+
+  const handleDelete = (index) => {
+    const updatedApplications = applications.filter((_, i) => i !== index);
+    setApplications(updatedApplications);
+    localStorage.setItem("applications", JSON.stringify(updatedApplications));
+  };
+
   return (
-    <div>
-      <h2>Shortlisting Results</h2>
-      <ul>
-        {shortlisted.map((app, index) => (
-          <li key={index}>
-            {app.firstName} {app.lastName} → {app.jobTitle} at {app.company} →{" "}
-            <b>{app.status}</b>
-          </li>
-        ))}
-      </ul>
+    <div className="select-container">
+      <FaArrowLeft className="back-icon" onClick={() => navigate("/home")} />
+      <h2>Selection Results</h2>
+
+      {applications.length === 0 ? (
+        <p>No applications found.</p>
+      ) : (
+        applications.map((app, index) => {
+          const result = getResultMessage(app);
+          return (
+            <div
+              key={index}
+              className={`result-card ${result.message.includes("selected") ? "selected" : "unfit"}`}
+            >
+              <h3>{app.firstName} {app.lastName}</h3>
+              <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
+              <p><strong>CGPA:</strong> {app.cgpa || "Not Provided"}</p>
+              <p><strong>Graduation Year:</strong> {app.graduationYear || "Not Provided"}</p>
+              <p><strong>Status:</strong> {result.message}</p>
+              {result.followUp && (
+                <p className="follow-up">{result.followUp}</p>
+              )}
+
+              {result.reasons.length > 0 && (
+                <>
+                  <p><strong>Reasons:</strong></p>
+                  <ul>
+                    {result.reasons.map((reason, i) => (
+                      <li key={i}>{reason}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {result.suggestions.length > 0 && (
+                <>
+                  <p><strong>Suggestions:</strong></p>
+                  <ul>
+                    {result.suggestions.map((tip, i) => (
+                      <li key={i}>{tip}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {result.message.includes("Unfit") && (
+                <small>
+                  <p><strong>Extra Tips:</strong></p>
+                  <ul className="extra-tips">
+                    <li>Join open-source projects for experience.</li>
+                    <li>Tailor your resume to each job.</li>
+                    <li>Try internships or freelance work.</li>
+                  </ul>
+                </small>
+              )}
+
+              <FaTrashAlt
+                className="back-icon2"
+                onClick={() => handleDelete(index)}
+                aria-label="Delete Application"
+              />
+            </div>
+          );
+        })
+      )}
     </div>
   );
-};
-
-export default Select;
+}
