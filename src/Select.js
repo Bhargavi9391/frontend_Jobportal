@@ -16,7 +16,8 @@ function Select() {
   const getResultMessage = (application) => {
  const matchedJob = jobs.find(
   (job) =>
-    normalize(application.position) === normalize(job.position) &&
+   normalize(application.jobTitle) === normalize(job.position)
+
     normalize(application.company) === normalize(job.company)
 );
 
