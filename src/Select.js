@@ -6,18 +6,18 @@ const Select = () => {
   const [shortlisted, setShortlisted] = useState([]);
 
   useEffect(() => {
-    const savedApplications = JSON.parse(localStorage.getItem("applications")) || [];
+    const savedApplications =
+      JSON.parse(localStorage.getItem("applications")) || [];
     const savedJobs = JSON.parse(localStorage.getItem("jobs")) || [];
     setApplications(savedApplications);
     setJobs(savedJobs);
 
     const matches = savedApplications.map((application) => {
-      const normalize = (str) =>
-        (str || "").toString().trim().toLowerCase();
+      const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
       const matchedJob = savedJobs.find(
         (job) =>
-          normalize(application.jobTitle) === normalize(job.position) && // ✅ fixed
+          normalize(application.jobTitle) === normalize(job.position) &&
           normalize(application.company) === normalize(job.company)
       );
 
@@ -35,12 +35,16 @@ const Select = () => {
         return { ...application, status: "❌ Education mismatch" };
       }
 
-      // Skills check
-      if (application.skills?.some((skill) => matchedJob.skills?.includes(skill))) {
-        return { ...application, status: "✅ Shortlisted" };
-      }
+      // Skills check: must include all required job skills
+      const hasAllSkills = matchedJob.skills.every((skill) =>
+        application.skills?.includes(skill)
+      );
 
-      return { ...application, status: "❌ Skills mismatch" };
+      if (hasAllSkills) {
+        return { ...application, status: "✅ Shortlisted" };
+      } else {
+        return { ...application, status: "❌ Skills mismatch" };
+      }
     });
 
     setShortlisted(matches);
@@ -52,7 +56,7 @@ const Select = () => {
       <ul>
         {shortlisted.map((app, index) => (
           <li key={index}>
-            {app.firstName} {app.lastName} → {app.jobTitle} at {app.company}  
+            {app.firstName} {app.lastName} → {app.jobTitle} at {app.company} →{" "}
             <b>{app.status}</b>
           </li>
         ))}
@@ -62,4 +66,3 @@ const Select = () => {
 };
 
 export default Select;
-
