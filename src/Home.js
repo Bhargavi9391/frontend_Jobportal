@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import axios from "axios";
 import "./Home.css";
 
@@ -19,16 +20,17 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  // ✅ Fetch user, jobs, localStorage data
+  // Load user and localStorage data
   useEffect(() => {
-    const authUser = localStorage.getItem("authenticatedUser");
-    if (authUser) {
+    const authenticatedUser = localStorage.getItem("authenticatedUser");
+    if (authenticatedUser) {
       try {
-        const parsedUser = JSON.parse(authUser);
+        const parsedUser = JSON.parse(authenticatedUser);
         setUser(parsedUser);
         setIsAdmin(localStorage.getItem("isAdmin") === "true");
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        setUser(null);
         navigate("/");
       }
     }
@@ -42,13 +44,13 @@ export default function Home() {
     const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
     setNotInterestedJobs(storedNotInterested);
 
+    // Fetch jobs from backend
     axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
-      .then((res) => {
-        setJobs(res.data); // backend jobs have _id
-      })
-      .catch((err) => console.error(err));
+      .then(res => setJobs(res.data))
+      .catch(err => console.error("Error fetching jobs:", err));
   }, [navigate]);
 
+  // Load application count and results viewed status
   useEffect(() => {
     const count = Number(localStorage.getItem("applicationCount")) || 0;
     const viewed = localStorage.getItem("hasViewedResults") === "true";
@@ -56,10 +58,10 @@ export default function Home() {
     setHasViewedResults(viewed);
   }, []);
 
-  const handleNavigateToSelect = () => {
-    navigate("/select");
-  };
+  // Navigation handlers
+  const handleNavigateToSelect = () => navigate("/select");
 
+  // Job interaction handlers
   const handleNotInterested = (jobId) => {
     const updated = [...notInterestedJobs, jobId];
     setNotInterestedJobs(updated);
@@ -68,24 +70,32 @@ export default function Home() {
 
   const toggleSaveJob = (job) => {
     let updatedSavedJobs = [...savedJobs];
-    const jobIndex = savedJobs.findIndex(saved => saved._id === job._id);
+    const jobIndex = savedJobs.findIndex(
+      saved => saved.position === job.position && saved.company === job.company
+    );
 
-    if (jobIndex === -1) updatedSavedJobs.push(job);
-    else updatedSavedJobs.splice(jobIndex, 1);
+    if (jobIndex === -1) {
+      updatedSavedJobs.push(job);
+    } else {
+      updatedSavedJobs.splice(jobIndex, 1);
+    }
 
     setSavedJobs(updatedSavedJobs);
     localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
   };
 
-  const isJobSaved = (job) => savedJobs.some(saved => saved._id === job._id);
+  const isJobSaved = (job) => savedJobs.some(
+    saved => saved.position === job.position && saved.company === job.company
+  );
 
+  // Logout handlers
   const handleLogout = async () => {
     try {
-      const res = await axios.get("https://randomuser.me/api/");
-      setRandomUser(res.data.results[0]);
+      const response = await axios.get("https://randomuser.me/api/");
+      setRandomUser(response.data.results[0]);
       setShowLogoutModal(true);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("Error fetching random user:", error);
     }
   };
 
@@ -102,7 +112,11 @@ export default function Home() {
         <div className="logo-container">
           <h1 className="brand-title">✨Career<span className="highlight">Crafter</span></h1>
         </div>
-        {!hasViewedResults && <div className="notification">{applicationCount}</div>}
+
+        <div className="notification">
+          {!hasViewedResults && <p className="application-count">{applicationCount}</p>}
+        </div>
+
         <ul className="nav-links">
           <li onClick={() => navigate("/home")}>Home</li>
           <li onClick={() => navigate("/companies")}>Companies</li>
@@ -111,9 +125,20 @@ export default function Home() {
           <li onClick={handleNavigateToSelect}>Results</li>
           <li className="more-link" onClick={() => setShowMoreMenu(!showMoreMenu)}>
             More
-            {showMoreMenu && <ul className="dropdown-menu"><li onClick={() => navigate("/more")}>Support</li></ul>}
+            {showMoreMenu && (
+              <ul className="dropdown-menu">
+                <li onClick={() => navigate("/more")}>Support</li>
+              </ul>
+            )}
           </li>
+          <div className="email-icon-wrapper">
+            <a href="mailto:owner@gmail.com?subject=Query" target="_blank" rel="noopener noreferrer">
+              <span className="email-icon">📧</span>
+            </a>
+            <div className="tooltip2">If you have any queries, email the admin.</div>
+          </div>
         </ul>
+
         <div className="logout-avatar" onClick={handleLogout}>
           {user?.email?.charAt(0)?.toUpperCase() || "U"}
         </div>
@@ -121,36 +146,38 @@ export default function Home() {
 
       {jobs.length > 0 ? (
         <div className="job-list">
-          {jobs.filter(job => !notInterestedJobs.includes(job._id)).map((job) => (
-            <div key={job._id} className="job-card">
-              <p>Posted: {new Date(job.postedTime).toLocaleString()}</p>
-              <h3>{job.position} at {job.company}</h3>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Work Type:</strong> {job.workType}</p>
-              <p><strong>Skills:</strong>
-                <ul>
-                  {Array.isArray(job.skills) ? job.skills.map((s, i) => <li key={i}>{s}</li>) : <li>None</li>}
-                </ul>
-              </p>
-              <p><strong>Education:</strong> {job.education}</p>
-              <p><strong>Description:</strong> {job.description}</p>
-              <p><strong>Vacancies:</strong> {job.vacancies}</p>
-              <p><strong>Salary:</strong> {job.salary}</p>
-              <p><strong>Expected Year:</strong> {job.expectedYear}</p>
+          {jobs
+            .filter(job => !notInterestedJobs.includes(job._id))
+            .map((job, idx) => (
+              <div key={idx} className="job-card">
+                <p>Posted: {new Date(job.postedTime).toLocaleString()}</p>
+                <h3>{job.position} at {job.company}</h3>
+                <p><strong>Location:</strong> {job.location}</p>
+                <p><strong>Work Type:</strong> {job.workType}</p>
+                <p><strong>Skills:</strong>
+                  <ul>
+                    {Array.isArray(job.skills) ? job.skills.map((skill, i) => <li key={i}>{skill}</li>) : <li>None</li>}
+                  </ul>
+                </p>
+                <p><strong>Education:</strong> {job.education}</p>
+                <p><strong>Description:</strong> {job.description}</p>
+                <p><strong>Vacancies:</strong> {job.vacancies}</p>
+                <p><strong>Salary:</strong> {job.salary}</p>
+                <p><strong>Expected Year:</strong> {job.expectedYear}</p>
 
-              <div className="job-actions">
-                <button className="save-btn" onClick={() => toggleSaveJob(job)}>
-                  {isJobSaved(job) ? <FaBookmark /> : <FaRegBookmark />}
-                </button>
-                <button className="apply-btn" onClick={() => navigate("/apply", { state: { jobId: job._id } })}>
-                  Apply
-                </button>
-                <button className="not-interested-btn" onClick={() => handleNotInterested(job._id)}>
-                  ❌ Not Interested
-                </button>
+                <div className="job-actions">
+                  <button className="save-btn" onClick={() => toggleSaveJob(job)}>
+                    {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
+                  </button>
+                  <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
+                    Apply
+                  </button>
+                  <button className="not-interested-btn" onClick={() => handleNotInterested(job._id)}>
+                    ❌ Not Interested
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       ) : (
         <p className="no-jobs">No jobs available.</p>
