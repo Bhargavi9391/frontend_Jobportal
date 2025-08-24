@@ -98,7 +98,7 @@ export default function Apply() {
       lastName: formData.lastName,
       graduationYear: formData.graduationYear,
       expectedYear: job.expectedYear || "",
-      education: "M.Tech",
+      education:  formData.education,
       requiredEducation: job.education || "",
       cgpa: formData.cgpa,
       linkedin: formData.linkedin,
@@ -142,6 +142,9 @@ export default function Apply() {
 
         <label>Graduation Year *</label>
         <input type="number" name="graduationYear" value={formData.graduationYear} onChange={handleChange} required />
+
+        <label>Education *</label>
+        <input type="text" name="education" value={formData.education}  onChange={handleChange}   required/>
 
         <label>CGPA *</label>
         <input type="text" name="cgpa" value={formData.cgpa} onChange={handleChange} required />
