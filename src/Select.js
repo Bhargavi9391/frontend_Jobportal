@@ -33,8 +33,9 @@ export default function Select() {
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(
       (job) =>
-        normalize(job.position) === normalize(application.jobTitle) &&
-        normalize(job.company) === normalize(application.company)
+      normalize(job.position).includes(normalize(application.jobTitle)) &&
+      normalize(job.company).includes(normalize(application.company))
+
     );
 
     if (!matchedJob) {
@@ -56,7 +57,8 @@ export default function Select() {
     const requiredYear =
       matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
 
-    if (application.graduationYear !== requiredYear) {
+   if (Number(application.graduationYear) !== Number(requiredYear))
+ {
       reasons.push(
         `Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`
       );
@@ -65,9 +67,11 @@ export default function Select() {
 
     // Check Skills
     const applicationSkills = application.skills || [];
-    const missingSkills = (matchedJob.skills || []).filter(
-      (skill) => !applicationSkills.map(normalize).includes(normalize(skill))
-    );
+   const missingSkills = (matchedJob.skills || []).filter(
+  (skill) =>
+    !applicationSkills.some((s) => normalize(s).includes(normalize(skill)))
+);
+
 
     if (missingSkills.length > 0) {
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
@@ -118,9 +122,8 @@ export default function Select() {
           return (
             <div
               key={index}
-              className={`result-card ${
-                result.message.includes("selected") ? "selected" : "unfit"
-              }`}
+             className={`result-card ${result.message.startsWith("✅") ? "selected" : "unfit"}`}
+
             >
               <h3>
                 {app.firstName} {app.lastName}
