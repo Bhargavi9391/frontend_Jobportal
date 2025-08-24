@@ -7,15 +7,7 @@ export default function Apply() {
   const navigate = useNavigate();
   const job = location.state?.job || {};
 
-  if (!job.position || !job.company) {
-    return (
-      <div className="apply-container">
-        <h2>Error: Job details are missing!</h2>
-        <p>Please go back to the job listing and try again.</p>
-      </div>
-    );
-  }
-
+  // Initialize skills and formData hooks first
   const initialSkills = [
     { name: "HTML", percentage: 0, color: "#ff6f61" },
     { name: "CSS", percentage: 0, color: "#1dd1a1" },
@@ -56,6 +48,16 @@ export default function Apply() {
     resumeFileName: "",
     manualSkills: "",
   });
+
+  // Now safe to return early if job data missing
+  if (!job.position || !job.company) {
+    return (
+      <div className="apply-container">
+        <h2>Error: Job details are missing!</h2>
+        <p>Please go back to the job listing and try again.</p>
+      </div>
+    );
+  }
 
   const handleSkillClick = (index, event) => {
     const progressBarWidth = event.target.offsetWidth;
