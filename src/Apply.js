@@ -90,21 +90,18 @@ export default function Apply() {
       .map((skill) => skill.name);
 
     const newDetailedApplication = {
-      jobTitle: job.position,
-      company: job.company,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      graduationYear: formData.graduationYear,
-      expectedYear: job.expectedYear || "",
-      education: formData.education,
-      requiredEducation: job.education || "",
-      cgpa: formData.cgpa,
-      linkedin: formData.linkedin,
-      location: formData.location,
-      resume: formData.resumeFileName,
-      skills: selectedSkills, // ✅ Only names
-      requiredSkills: job.skills || [],
-    };
+  jobTitle: job.position,   // ✅ must match "position" in jobs
+  company: job.company,     // ✅ must match "company" in jobs
+  firstName: formData.firstName,
+  lastName: formData.lastName,
+  graduationYear: formData.graduationYear,
+  education: formData.education,
+  cgpa: formData.cgpa,
+  linkedin: formData.linkedin,
+  location: formData.location,
+  resume: formData.resumeFileName,
+  skills: selectedSkills,   // ✅ array of skill names
+};
 
     const simplifiedApplication = {
       jobId: job.id,
