@@ -90,7 +90,7 @@ export default function Apply() {
       .map((skill) => skill.name);
 
     const newDetailedApplication = {
-      jobTitle: job.position,
+      position: job.position,
       company: job.company,
       firstName: formData.firstName,
       lastName: formData.lastName,
