@@ -7,6 +7,15 @@ export default function Apply() {
   const navigate = useNavigate();
   const job = location.state?.job || {};
 
+  if (!job.position || !job.company) {
+    return (
+      <div className="apply-container">
+        <h2>Error: Job details are missing!</h2>
+        <p>Please go back to the job listing and try again.</p>
+      </div>
+    );
+  }
+
   const initialSkills = [
     { name: "HTML", percentage: 0, color: "#ff6f61" },
     { name: "CSS", percentage: 0, color: "#1dd1a1" },
@@ -45,10 +54,10 @@ export default function Apply() {
     linkedin: "",
     location: "",
     resumeFileName: "",
-    manualSkills: "",  // <-- Add manualSkills here
+    manualSkills: "",
   });
 
-  const handleClick = (index, event) => {
+  const handleSkillClick = (index, event) => {
     const progressBarWidth = event.target.offsetWidth;
     const clickPosition = event.nativeEvent.offsetX;
     const newPercentage = Math.round((clickPosition / progressBarWidth) * 100);
@@ -58,24 +67,15 @@ export default function Apply() {
     setSkills(updatedSkills);
   };
 
-  if (!job.position || !job.company) {
-    return (
-      <div className="apply-container">
-        <h2>Error: Job details are missing!</h2>
-        <p>Please go back to the job listing and try again.</p>
-      </div>
-    );
-  }
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
-      setFormData((prevData) => ({ ...prevData, resumeFileName: file.name }));
+      setFormData((prev) => ({ ...prev, resumeFileName: file.name }));
     } else {
       alert("Please upload a valid PDF file for the resume.");
     }
@@ -85,19 +85,15 @@ export default function Apply() {
     e.preventDefault();
 
     const selectedSkills = skills
-      .filter((skill) => skill.percentage > 0)
-      .map((skill) => ({
-        name: skill.name,
-        level: skill.percentage,
-      }));
+      .filter((s) => s.percentage > 0)
+      .map((s) => ({ name: s.name, level: s.percentage }));
 
-    // Process manual skills as an array (split by comma and trim)
     const manualSkillsArray = formData.manualSkills
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    const newDetailedApplication = {
+    const detailedApplication = {
       jobTitle: job.position,
       company: job.company,
       firstName: formData.firstName,
@@ -116,7 +112,7 @@ export default function Apply() {
     };
 
     const simplifiedApplication = {
-      jobId: job.id,
+      jobId: job._id || job.id,
       position: job.position,
       company: job.company,
       appliedAt: new Date().toISOString(),
@@ -124,7 +120,7 @@ export default function Apply() {
 
     try {
       const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
-      const updatedApplications = [...existingApplications, { ...newDetailedApplication, ...simplifiedApplication }];
+      const updatedApplications = [...existingApplications, { ...detailedApplication, ...simplifiedApplication }];
       localStorage.setItem("applications", JSON.stringify(updatedApplications));
       localStorage.setItem("applicationCount", updatedApplications.length);
       localStorage.setItem("hasViewedResults", "false");
@@ -168,31 +164,17 @@ export default function Apply() {
             {skills.map((skill, index) => (
               <div key={skill.name} className="skill-row">
                 <div className="skill-name">{skill.name}</div>
-                <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
-                  <div
-                    className="progress"
-                    style={{
-                      width: `${skill.percentage}%`,
-                      backgroundColor: skill.color,
-                    }}
-                  />
+                <div className="progress-bar" onClick={(e) => handleSkillClick(index, e)}>
+                  <div className="progress" style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }} />
                 </div>
-                <div className="percentage">
-                  {skill.percentage === 0 ? "" : `${skill.percentage}%`}
-                </div>
+                <div className="percentage">{skill.percentage > 0 ? `${skill.percentage}%` : ""}</div>
               </div>
             ))}
           </div>
         </div>
 
         <label>Enter Your Skills Manually (comma-separated)</label>
-        <input
-          type="text"
-          name="manualSkills"
-          value={formData.manualSkills}
-          onChange={handleChange}
-          placeholder="e.g. HTML, CSS, JavaScript"
-        />
+        <input type="text" name="manualSkills" value={formData.manualSkills} onChange={handleChange} placeholder="e.g. HTML, CSS, JavaScript" />
 
         <button type="submit" className="submit-btn">Submit</button>
       </form>
