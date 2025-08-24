@@ -37,6 +37,12 @@ export default function Submissions() {
               <p><strong>Name:</strong> {app.firstName} {app.lastName}</p>
               <p><strong>Skills:</strong> {app.skills?.length > 0 ? app.skills.join(", ") : "Not Provided"}</p>
               <p><strong>Graduation Year:</strong> {app.graduationYear}</p>
+            <p>
+                <strong>Education:</strong> {app.education} 
+                (Required: {app.requiredEducation})
+          </p>
+
+
               <p><strong>CGPA:</strong> {app.cgpa}</p>
               <p><strong>LinkedIn:</strong> <a href={app.linkedin} target="_blank" rel="noopener noreferrer">View Profile</a></p>
               <p><strong>Location:</strong> {app.location}</p>
