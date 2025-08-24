@@ -7,17 +7,14 @@ export default function SavedJobs() {
   const [savedJobs, setSavedJobs] = useState([]);
   const navigate = useNavigate();
 
-  // Load saved jobs from localStorage
   useEffect(() => {
     const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
     setSavedJobs(storedSavedJobs);
   }, []);
 
-  // Remove a job from saved list
+ 
   const removeJob = (jobToRemove) => {
-    const updatedJobs = savedJobs.filter(
-      (job) => job.position !== jobToRemove.position || job.company !== jobToRemove.company
-    );
+    const updatedJobs = savedJobs.filter((job) => job.position !== jobToRemove.position || job.company !== jobToRemove.company);
     setSavedJobs(updatedJobs);
     localStorage.setItem("savedJobs", JSON.stringify(updatedJobs));
   };
@@ -25,9 +22,8 @@ export default function SavedJobs() {
   return (
     <div className="saved-jobs-container">
       <h2 className="title">Saved Jobs</h2>
-
       {savedJobs.length > 0 ? (
-        <div className="job-list">
+        <div className="job-list1">
           {savedJobs.map((job, index) => (
             <div key={index} className="job-card">
               <h3>{job.position} at {job.company}</h3>
@@ -43,10 +39,7 @@ export default function SavedJobs() {
       ) : (
         <p className="no-jobs">No saved jobs.</p>
       )}
-
-      <button className="back-btn" onClick={() => navigate("/home")}>
-        Back to Home
-      </button>
+      <button className="back-btn" onClick={() => navigate("/home")}>Back to Home</button>
     </div>
   );
 }
