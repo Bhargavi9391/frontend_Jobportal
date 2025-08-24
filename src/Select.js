@@ -8,51 +8,51 @@ export default function Select() {
   const [applications, setApplications] = useState([]);
   const [adminJobs, setAdminJobs] = useState([]);
 
+  // Load applications and admin jobs from localStorage
   useEffect(() => {
     const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
     const storedAdminJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-
     setApplications(storedApplications);
     setAdminJobs(storedAdminJobs);
   }, []);
 
+  // Mark results as viewed
   useEffect(() => {
     localStorage.setItem("hasViewedResults", "true");
   }, []);
 
+  // Generate selection result for a single application
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(job =>
       job.position === application.jobTitle &&
       job.company === application.company
     );
 
-    if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
+    if (!matchedJob) {
+      return { message: "❌ Job not found", reasons: [], suggestions: [] };
+    }
 
     const reasons = [];
     const suggestions = [];
 
-    if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
+    // Check CGPA
+    if (Number(application.cgpa) < Number(matchedJob.cgpa || 0)) {
       reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
       suggestions.push("Consider improving your CGPA through additional courses.");
     }
 
+    // Check graduation year
     const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
     if (application.graduationYear !== requiredYear) {
       reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
       suggestions.push("Apply to roles that match your timeline.");
     }
 
-    // Fix: safely normalize skill names as strings
+    // Check skills
     const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
-
     const applicationSkills = application.skills || [];
-    // Extract skill names from application skills objects, then normalize
     const applicationSkillNames = applicationSkills.map(skill => normalize(skill.name));
-
-    // Normalize required skills from matchedJob.skills and check missing
-    const missingSkills = matchedJob.skills.filter(skill =>
-      !applicationSkillNames.includes(normalize(skill))
-    );
+    const missingSkills = (matchedJob.skills || []).filter(skill => !applicationSkillNames.includes(normalize(skill)));
 
     if (missingSkills.length > 0) {
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
@@ -76,6 +76,7 @@ export default function Select() {
     }
   };
 
+  // Delete an application
   const handleDelete = (index) => {
     const updatedApplications = applications.filter((_, i) => i !== index);
     setApplications(updatedApplications);
@@ -92,27 +93,25 @@ export default function Select() {
       ) : (
         applications.map((app, index) => {
           const result = getResultMessage(app);
+          const isSelected = result.message.includes("selected");
+
           return (
             <div
               key={index}
-              className={`result-card ${result.message.includes("selected") ? "selected" : "unfit"}`}
+              className={`result-card ${isSelected ? "selected" : "unfit"}`}
             >
               <h3>{app.firstName} {app.lastName}</h3>
               <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
               <p><strong>CGPA:</strong> {app.cgpa || "Not Provided"}</p>
               <p><strong>Graduation Year:</strong> {app.graduationYear || "Not Provided"}</p>
               <p><strong>Status:</strong> {result.message}</p>
-              {result.followUp && (
-                <p className="follow-up">{result.followUp}</p>
-              )}
+              {result.followUp && <p className="follow-up">{result.followUp}</p>}
 
               {result.reasons.length > 0 && (
                 <>
                   <p><strong>Reasons:</strong></p>
                   <ul>
-                    {result.reasons.map((reason, i) => (
-                      <li key={i}>{reason}</li>
-                    ))}
+                    {result.reasons.map((reason, i) => <li key={i}>{reason}</li>)}
                   </ul>
                 </>
               )}
@@ -121,14 +120,12 @@ export default function Select() {
                 <>
                   <p><strong>Suggestions:</strong></p>
                   <ul>
-                    {result.suggestions.map((tip, i) => (
-                      <li key={i}>{tip}</li>
-                    ))}
+                    {result.suggestions.map((tip, i) => <li key={i}>{tip}</li>)}
                   </ul>
                 </>
               )}
 
-              {result.message.includes("Unfit") && (
+              {!isSelected && (
                 <small>
                   <p><strong>Extra Tips:</strong></p>
                   <ul className="extra-tips">
@@ -151,3 +148,4 @@ export default function Select() {
     </div>
   );
 }
+
