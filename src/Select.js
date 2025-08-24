@@ -1,3 +1,5 @@
+// src/pages/Select.js
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
@@ -9,20 +11,26 @@ export default function Select() {
   const [adminJobs, setAdminJobs] = useState([]);
 
   useEffect(() => {
-    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
-    const storedAdminJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+    // Load applications from localStorage
+    const storedApplications =
+      JSON.parse(localStorage.getItem("applications")) || [];
+    const storedAdminJobs =
+      JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+
     setApplications(storedApplications);
     setAdminJobs(storedAdminJobs);
   }, []);
 
   useEffect(() => {
+    // Mark results page as viewed
     localStorage.setItem("hasViewedResults", "true");
   }, []);
 
+  // Normalize function (to ignore case & spaces)
   const normalize = (str) => (str || "").trim().toLowerCase();
 
+  // Function to check result
   const getResultMessage = (application) => {
-    // Find the matching job (case-insensitive)
     const matchedJob = adminJobs.find(
       (job) =>
         normalize(job.position) === normalize(application.jobTitle) &&
@@ -38,17 +46,21 @@ export default function Select() {
 
     // Check CGPA
     if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
-      reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
-      suggestions.push("Consider improving your CGPA through additional courses.");
+      reasons.push(
+        `Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`
+      );
+      suggestions.push("Consider improving your CGPA through extra learning.");
     }
 
     // Check Graduation Year
-    const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
+    const requiredYear =
+      matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
+
     if (application.graduationYear !== requiredYear) {
       reasons.push(
         `Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`
       );
-      suggestions.push("Apply to roles that match your graduation timeline.");
+      suggestions.push("Apply to jobs matching your graduation timeline.");
     }
 
     // Check Skills
@@ -59,27 +71,31 @@ export default function Select() {
 
     if (missingSkills.length > 0) {
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
-      suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
+      suggestions.push(
+        "Learn these skills via Udemy, Coursera, or open-source projects."
+      );
     }
 
-    // Final decision
+    // Final Result
     if (reasons.length === 0) {
       return {
         message: "✅ You are selected! 🎉",
-        followUp: "Details will be shared soon. Check your email regularly!",
+        followUp:
+          "Details will be shared soon. Please check your email regularly.",
         reasons: [],
-        suggestions: []
+        suggestions: [],
       };
     } else {
       return {
         message: "❌ Unfit for this job",
-        followUp: "Don’t be discouraged. Improve and try again!",
+        followUp: "Don’t be discouraged. Improve and apply again!",
         reasons,
-        suggestions
+        suggestions,
       };
     }
   };
 
+  // Delete application
   const handleDelete = (index) => {
     const updatedApplications = applications.filter((_, i) => i !== index);
     setApplications(updatedApplications);
@@ -88,7 +104,9 @@ export default function Select() {
 
   return (
     <div className="select-container">
+      {/* Back to home button */}
       <FaArrowLeft className="back-icon" onClick={() => navigate("/home")} />
+
       <h2>Selection Results</h2>
 
       {applications.length === 0 ? (
@@ -96,21 +114,41 @@ export default function Select() {
       ) : (
         applications.map((app, index) => {
           const result = getResultMessage(app);
+
           return (
             <div
               key={index}
-              className={`result-card ${result.message.includes("selected") ? "selected" : "unfit"}`}
+              className={`result-card ${
+                result.message.includes("selected") ? "selected" : "unfit"
+              }`}
             >
-              <h3>{app.firstName} {app.lastName}</h3>
-              <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
-              <p><strong>CGPA:</strong> {app.cgpa || "Not Provided"}</p>
-              <p><strong>Graduation Year:</strong> {app.graduationYear || "Not Provided"}</p>
-              <p><strong>Status:</strong> {result.message}</p>
-              {result.followUp && <p className="follow-up">{result.followUp}</p>}
+              <h3>
+                {app.firstName} {app.lastName}
+              </h3>
+              <p>
+                <strong>Applied for:</strong> {app.jobTitle} at {app.company}
+              </p>
+              <p>
+                <strong>CGPA:</strong> {app.cgpa || "Not Provided"}
+              </p>
+              <p>
+                <strong>Graduation Year:</strong>{" "}
+                {app.graduationYear || "Not Provided"}
+              </p>
+              <p>
+                <strong>Status:</strong> {result.message}
+              </p>
 
+              {result.followUp && (
+                <p className="follow-up">{result.followUp}</p>
+              )}
+
+              {/* Reasons */}
               {result.reasons.length > 0 && (
                 <>
-                  <p><strong>Reasons:</strong></p>
+                  <p>
+                    <strong>Reasons:</strong>
+                  </p>
                   <ul>
                     {result.reasons.map((reason, i) => (
                       <li key={i}>{reason}</li>
@@ -119,9 +157,12 @@ export default function Select() {
                 </>
               )}
 
+              {/* Suggestions */}
               {result.suggestions.length > 0 && (
                 <>
-                  <p><strong>Suggestions:</strong></p>
+                  <p>
+                    <strong>Suggestions:</strong>
+                  </p>
                   <ul>
                     {result.suggestions.map((tip, i) => (
                       <li key={i}>{tip}</li>
@@ -130,9 +171,12 @@ export default function Select() {
                 </>
               )}
 
+              {/* Extra Tips for Unfit */}
               {result.message.includes("Unfit") && (
                 <small>
-                  <p><strong>Extra Tips:</strong></p>
+                  <p>
+                    <strong>Extra Tips:</strong>
+                  </p>
                   <ul className="extra-tips">
                     <li>Join open-source projects for experience.</li>
                     <li>Tailor your resume to each job.</li>
@@ -141,6 +185,7 @@ export default function Select() {
                 </small>
               )}
 
+              {/* Delete button */}
               <FaTrashAlt
                 className="back-icon2"
                 onClick={() => handleDelete(index)}
