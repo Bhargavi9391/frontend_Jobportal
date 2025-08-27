@@ -31,37 +31,41 @@ export default function Select() {
     const reasons = [];
     const suggestions = [];
 
+    // ✅ Check CGPA
     if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
       reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
       suggestions.push("Consider improving your CGPA through additional courses.");
     }
 
+    // ✅ Check Graduation Year
     const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
     if (application.graduationYear !== requiredYear) {
       reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
       suggestions.push("Apply to roles that match your timeline.");
     }
 
-    // Fix: safely normalize skill names as strings
+    // ✅ Skills Matching
     const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
     const applicationSkills = application.skills || [];
-    // Extract skill names from application skills objects, then normalize
     const applicationSkillNames = applicationSkills.map(skill => normalize(skill.name));
 
-    // Normalize required skills from matchedJob.skills and check missing
-    const missingSkills = matchedJob.skills.filter(skill =>
-      !applicationSkillNames.includes(normalize(skill))
+    const requiredSkills = (matchedJob.skills || []).map(skill => normalize(skill));
+
+    const hasAllRequiredSkills = requiredSkills.every(skill =>
+      applicationSkillNames.includes(skill)
     );
 
-    if (missingSkills.length > 0) {
+    if (!hasAllRequiredSkills) {
+      const missingSkills = requiredSkills.filter(skill => !applicationSkillNames.includes(skill));
       reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
       suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
     }
 
+    // ✅ Final Result
     if (reasons.length === 0) {
       return {
-        message: "✅ You are selected! 🎉",
+        message: "✅ Shortlisted: You are fit for this job 🎉",
         followUp: "Details will be shared soon. Check your email regularly!",
         reasons: [],
         suggestions: []
@@ -95,7 +99,7 @@ export default function Select() {
           return (
             <div
               key={index}
-              className={`result-card ${result.message.includes("selected") ? "selected" : "unfit"}`}
+              className={`result-card ${result.message.includes("Shortlisted") ? "selected" : "unfit"}`}
             >
               <h3>{app.firstName} {app.lastName}</h3>
               <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
@@ -126,17 +130,6 @@ export default function Select() {
                     ))}
                   </ul>
                 </>
-              )}
-
-              {result.message.includes("Unfit") && (
-                <small>
-                  <p><strong>Extra Tips:</strong></p>
-                  <ul className="extra-tips">
-                    <li>Join open-source projects for experience.</li>
-                    <li>Tailor your resume to each job.</li>
-                    <li>Try internships or freelance work.</li>
-                  </ul>
-                </small>
               )}
 
               <FaTrashAlt
