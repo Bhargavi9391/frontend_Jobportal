@@ -104,7 +104,7 @@ export default function Apply() {
       linkedin: formData.linkedin,
       location: formData.location,
       resume: formData.resumeFileName,
-      skills: selectedSkills,
+      skills: selectedSkills,   // ✅ store properly for matching
       manualSkills: manualSkillsArray,
       requiredSkills: job.skills || [],
     };
@@ -187,4 +187,3 @@ export default function Apply() {
     </div>
   );
 }
-
