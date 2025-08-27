@@ -1,189 +1,190 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import "./Apply.css";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
+import "./Select.css";
 
-export default function Apply() {
-  const location = useLocation();
+export default function Select() {
   const navigate = useNavigate();
-  const job = location.state?.job || {};
+  const [applications, setApplications] = useState([]);
+  const [adminJobs, setAdminJobs] = useState([]);
 
-  const initialSkills = [
-    { name: "HTML", percentage: 0, color: "#ff6f61" },
-    { name: "CSS", percentage: 0, color: "#1dd1a1" },
-    { name: "JavaScript", percentage: 0, color: "#feca57" },
-    { name: "React", percentage: 0, color: "#48dbfb" },
-    { name: "Node.js", percentage: 0, color: "#ffa502" },
-    { name: "Python", percentage: 0, color: "#5f27cd" },
-    { name: "Java", percentage: 0, color: "#d63031" },
-    { name: "C++", percentage: 0, color: "#576574" },
-    { name: "SQL", percentage: 0, color: "#ff9ff3" },
-    { name: "MySQL", percentage: 0, color: "#00d2d3" },
-  ];
+  useEffect(() => {
+    const storedApplications =
+      JSON.parse(localStorage.getItem("applications")) || [];
+    const storedAdminJobs =
+      JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+    setApplications(storedApplications);
+    setAdminJobs(storedAdminJobs);
+  }, []);
 
-  const generateColor = (name) => {
-    const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const hue = hash % 360;
-    return `hsl(${hue}, 70%, 60%)`;
-  };
+  useEffect(() => {
+    localStorage.setItem("hasViewedResults", "true");
+  }, []);
 
-  const requiredSkillNames = job.skills || [];
-  const [skills, setSkills] = useState(
-    requiredSkillNames.map((skillName) => {
-      const existing = initialSkills.find((s) => s.name === skillName);
-      return existing
-        ? { ...existing }
-        : { name: skillName, percentage: 0, color: generateColor(skillName) };
-    })
-  );
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    graduationYear: "",
-    cgpa: "",
-    linkedin: "",
-    location: "",
-    resumeFileName: "",
-    manualSkills: "",
-  });
-
-  const handleClick = (index, event) => {
-    const progressBarWidth = event.target.offsetWidth;
-    const clickPosition = event.nativeEvent.offsetX;
-    const newPercentage = Math.round((clickPosition / progressBarWidth) * 100);
-    const updatedSkills = [...skills];
-    updatedSkills[index].percentage = newPercentage;
-    setSkills(updatedSkills);
-  };
-
-  if (!job.position || !job.company) {
-    return (
-      <div className="apply-container">
-        <h2>Error: Job details are missing!</h2>
-        <p>Please go back to the job listing and try again.</p>
-      </div>
+  const getResultMessage = (application) => {
+    const matchedJob = adminJobs.find(
+      (job) =>
+        job.position === application.jobTitle &&
+        job.company === application.company
     );
-  }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
+    if (!matchedJob)
+      return { message: "❌ Job not found", reasons: [], suggestions: [] };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setFormData((prevData) => ({ ...prevData, resumeFileName: file.name }));
+    const reasons = [];
+    const suggestions = [];
+
+    // ✅ CGPA check
+    if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
+      reasons.push(
+        `Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`
+      );
+      suggestions.push("Consider improving your CGPA through additional courses.");
+    }
+
+    // ✅ Graduation Year check
+    const requiredYear =
+      matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
+    if (application.graduationYear !== requiredYear) {
+      reasons.push(
+        `Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`
+      );
+      suggestions.push("Apply to roles that match your timeline.");
+    }
+
+    // ✅ Skills check
+    const normalize = (str) =>
+      typeof str === "string" ? str.trim().toLowerCase() : "";
+
+    const applicationSkills = application.skills || [];
+    const applicationSkillNames = [
+      ...new Set(applicationSkills.map((skill) => normalize(skill.name))), // remove duplicates
+    ];
+
+    const jobSkills = matchedJob.skills || [];
+    const missingSkills = jobSkills.filter(
+      (skill) => !applicationSkillNames.includes(normalize(skill))
+    );
+
+    if (missingSkills.length > 0) {
+      reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
+      suggestions.push(
+        "Learn these skills via platforms like Udemy, Coursera, etc."
+      );
+    }
+
+    // ✅ Final result
+    if (reasons.length === 0) {
+      return {
+        message: "✅ You are selected! 🎉",
+        followUp:
+          "Details will be shared soon. Check your email regularly!",
+        reasons: [],
+        suggestions: [],
+      };
     } else {
-      alert("Please upload a valid PDF file for the resume.");
+      return {
+        message: "❌ Unfit for this job",
+        followUp: "Don’t be discouraged. Improve and try again!",
+        reasons,
+        suggestions,
+      };
     }
   };
-const handleSubmit = (e) => {
-  e.preventDefault();
 
-  const selectedSkills = skills
-    .filter((skill) => skill.percentage > 0)
-    .map((skill) => skill.name); // ✅ only store names
-
-  const manualSkillsArray = formData.manualSkills
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-
-  const newDetailedApplication = {
-    jobTitle: job.position,
-    company: job.company,
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    graduationYear: formData.graduationYear,
-    expectedYear: job.expectedYear || "",
-    education: "M.Tech",
-    requiredEducation: job.education || "",
-    cgpa: formData.cgpa,
-    linkedin: formData.linkedin,
-    location: formData.location,
-    resume: formData.resumeFileName,
-    skills: [...selectedSkills, ...manualSkillsArray], // ✅ simplified
-    requiredSkills: job.skills || [],
-  };
-
-  const simplifiedApplication = {
-    jobId: job.id,
-    position: job.position,
-    company: job.company,
-    appliedAt: new Date().toISOString(),
-  };
-
-  try {
-    const existingApplications =
-      JSON.parse(localStorage.getItem("applications")) || [];
-    const updatedApplications = [
-      ...existingApplications,
-      { ...newDetailedApplication, ...simplifiedApplication },
-    ];
+  const handleDelete = (index) => {
+    const updatedApplications = applications.filter((_, i) => i !== index);
+    setApplications(updatedApplications);
     localStorage.setItem("applications", JSON.stringify(updatedApplications));
-    localStorage.setItem("applicationCount", updatedApplications.length);
-    localStorage.setItem("hasViewedResults", "false");
-    alert("Application submitted successfully!");
-    navigate("/submissions");
-  } catch (err) {
-    alert("Error saving your application. Storage limit might be exceeded.");
-    console.error(err);
-  }
-};
-
+  };
 
   return (
-    <div className="apply-container">
-      <h2>Apply for {job.position} at {job.company}</h2>
-      <form className="apply-form" onSubmit={handleSubmit}>
-        <label>First Name *</label>
-        <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
+    <div className="select-container">
+      <FaArrowLeft className="back-icon" onClick={() => navigate("/home")} />
+      <h2>Selection Results</h2>
 
-        <label>Last Name *</label>
-        <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
+      {applications.length === 0 ? (
+        <p>No applications found.</p>
+      ) : (
+        applications.map((app, index) => {
+          const result = getResultMessage(app);
 
-        <label>Graduation Year *</label>
-        <input type="number" name="graduationYear" value={formData.graduationYear} onChange={handleChange} required />
+          return (
+            <div
+              key={index}
+              className={`result-card ${
+                result.message.includes("selected") ? "selected" : "unfit"
+              }`}
+            >
+              <h3>
+                {app.firstName} {app.lastName}
+              </h3>
+              <p>
+                <strong>Applied for:</strong> {app.jobTitle} at {app.company}
+              </p>
+              <p>
+                <strong>CGPA:</strong> {app.cgpa || "Not Provided"}
+              </p>
+              <p>
+                <strong>Graduation Year:</strong>{" "}
+                {app.graduationYear || "Not Provided"}
+              </p>
+              <p>
+                <strong>Status:</strong> {result.message}
+              </p>
 
-        <label>CGPA *</label>
-        <input type="text" name="cgpa" value={formData.cgpa} onChange={handleChange} required />
+              {result.followUp && (
+                <p className="follow-up">{result.followUp}</p>
+              )}
 
-        <label>LinkedIn Profile *</label>
-        <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} required />
+              {result.reasons.length > 0 && (
+                <>
+                  <p>
+                    <strong>Reasons:</strong>
+                  </p>
+                  <ul>
+                    {result.reasons.map((reason, i) => (
+                      <li key={i}>{reason}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
-        <label>Upload Resume (PDF) *</label>
-        <input type="file" accept=".pdf" onChange={handleFileChange} required />
+              {result.suggestions.length > 0 && (
+                <>
+                  <p>
+                    <strong>Suggestions:</strong>
+                  </p>
+                  <ul>
+                    {result.suggestions.map((tip, i) => (
+                      <li key={i}>{tip}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
-        <label>Current Location *</label>
-        <input type="text" name="location" value={formData.location} onChange={handleChange} required />
+              {result.message.includes("Unfit") && (
+                <small>
+                  <p>
+                    <strong>Extra Tips:</strong>
+                  </p>
+                  <ul className="extra-tips">
+                    <li>Join open-source projects for experience.</li>
+                    <li>Tailor your resume to each job.</li>
+                    <li>Try internships or freelance work.</li>
+                  </ul>
+                </small>
+              )}
 
-        <div className="skill-section">
-          <label>Set Your Skill Levels *</label>
-          <div className="container">
-            {skills.map((skill, index) => (
-              <div key={skill.name} className="skill-row">
-                <div className="skill-name">{skill.name}</div>
-                <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
-                  <div className="progress" style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }} />
-                </div>
-                <div className="percentage">{skill.percentage === 0 ? "" : `${skill.percentage}%`}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <label>Enter Your Skills Manually (comma-separated)</label>
-        <input
-          type="text"
-          name="manualSkills"
-          value={formData.manualSkills}
-          onChange={handleChange}
-          placeholder="e.g. HTML, CSS, JavaScript"
-        />
-
-        <button type="submit" className="submit-btn">Submit</button>
-      </form>
+              <FaTrashAlt
+                className="back-icon2"
+                onClick={() => handleDelete(index)}
+                aria-label="Delete Application"
+              />
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
