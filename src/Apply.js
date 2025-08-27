@@ -1,190 +1,127 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaTrashAlt } from "react-icons/fa";
-import "./Select.css";
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import "./Apply.css";
 
-export default function Select() {
+export default function Apply() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
-  const [adminJobs, setAdminJobs] = useState([]);
+  const job = location.state?.job || {};
 
-  useEffect(() => {
-    const storedApplications =
-      JSON.parse(localStorage.getItem("applications")) || [];
-    const storedAdminJobs =
-      JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-    setApplications(storedApplications);
-    setAdminJobs(storedAdminJobs);
-  }, []);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    graduationYear: "",
+    cgpa: "",
+    linkedIn: "",
+    location: "",
+    skills: "",
+  });
 
-  useEffect(() => {
-    localStorage.setItem("hasViewedResults", "true");
-  }, []);
-
-  const getResultMessage = (application) => {
-    const matchedJob = adminJobs.find(
-      (job) =>
-        job.position === application.jobTitle &&
-        job.company === application.company
-    );
-
-    if (!matchedJob)
-      return { message: "❌ Job not found", reasons: [], suggestions: [] };
-
-    const reasons = [];
-    const suggestions = [];
-
-    // ✅ CGPA check
-    if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
-      reasons.push(
-        `Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`
-      );
-      suggestions.push("Consider improving your CGPA through additional courses.");
-    }
-
-    // ✅ Graduation Year check
-    const requiredYear =
-      matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
-    if (application.graduationYear !== requiredYear) {
-      reasons.push(
-        `Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`
-      );
-      suggestions.push("Apply to roles that match your timeline.");
-    }
-
-    // ✅ Skills check
-    const normalize = (str) =>
-      typeof str === "string" ? str.trim().toLowerCase() : "";
-
-    const applicationSkills = application.skills || [];
-    const applicationSkillNames = [
-      ...new Set(applicationSkills.map((skill) => normalize(skill.name))), // remove duplicates
-    ];
-
-    const jobSkills = matchedJob.skills || [];
-    const missingSkills = jobSkills.filter(
-      (skill) => !applicationSkillNames.includes(normalize(skill))
-    );
-
-    if (missingSkills.length > 0) {
-      reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
-      suggestions.push(
-        "Learn these skills via platforms like Udemy, Coursera, etc."
-      );
-    }
-
-    // ✅ Final result
-    if (reasons.length === 0) {
-      return {
-        message: "✅ You are selected! 🎉",
-        followUp:
-          "Details will be shared soon. Check your email regularly!",
-        reasons: [],
-        suggestions: [],
-      };
-    } else {
-      return {
-        message: "❌ Unfit for this job",
-        followUp: "Don’t be discouraged. Improve and try again!",
-        reasons,
-        suggestions,
-      };
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDelete = (index) => {
-    const updatedApplications = applications.filter((_, i) => i !== index);
-    setApplications(updatedApplications);
-    localStorage.setItem("applications", JSON.stringify(updatedApplications));
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // ✅ simple logic: check once and decide status
+    let status = "Rejected";
+
+    if (
+      formData.graduationYear == job.expectedYear &&
+      parseFloat(formData.cgpa) >= 6.0 && // you can adjust cutoff
+      formData.skills.toLowerCase().includes(job.skills[0].toLowerCase()) &&
+      formData.location.toLowerCase() === job.location.toLowerCase() &&
+      job.education.toLowerCase() === "m.tech"
+    ) {
+      status = "Shortlisted";
+    }
+
+    const newApplication = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      graduationYear: formData.graduationYear,
+      cgpa: formData.cgpa,
+      linkedIn: formData.linkedIn,
+      location: formData.location,
+      skills: formData.skills.split(",").map((s) => s.trim()),
+      jobTitle: job.position,
+      company: job.company,
+      education: job.education,
+      status: status, // ✅ save result
+    };
+
+    const existingApps = JSON.parse(localStorage.getItem("applications")) || [];
+    existingApps.push(newApplication);
+    localStorage.setItem("applications", JSON.stringify(existingApps));
+
+    alert(`Application submitted! Status: ${status}`);
+    navigate("/select");
   };
 
   return (
-    <div className="select-container">
-      <FaArrowLeft className="back-icon" onClick={() => navigate("/home")} />
-      <h2>Selection Results</h2>
-
-      {applications.length === 0 ? (
-        <p>No applications found.</p>
-      ) : (
-        applications.map((app, index) => {
-          const result = getResultMessage(app);
-
-          return (
-            <div
-              key={index}
-              className={`result-card ${
-                result.message.includes("selected") ? "selected" : "unfit"
-              }`}
-            >
-              <h3>
-                {app.firstName} {app.lastName}
-              </h3>
-              <p>
-                <strong>Applied for:</strong> {app.jobTitle} at {app.company}
-              </p>
-              <p>
-                <strong>CGPA:</strong> {app.cgpa || "Not Provided"}
-              </p>
-              <p>
-                <strong>Graduation Year:</strong>{" "}
-                {app.graduationYear || "Not Provided"}
-              </p>
-              <p>
-                <strong>Status:</strong> {result.message}
-              </p>
-
-              {result.followUp && (
-                <p className="follow-up">{result.followUp}</p>
-              )}
-
-              {result.reasons.length > 0 && (
-                <>
-                  <p>
-                    <strong>Reasons:</strong>
-                  </p>
-                  <ul>
-                    {result.reasons.map((reason, i) => (
-                      <li key={i}>{reason}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {result.suggestions.length > 0 && (
-                <>
-                  <p>
-                    <strong>Suggestions:</strong>
-                  </p>
-                  <ul>
-                    {result.suggestions.map((tip, i) => (
-                      <li key={i}>{tip}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {result.message.includes("Unfit") && (
-                <small>
-                  <p>
-                    <strong>Extra Tips:</strong>
-                  </p>
-                  <ul className="extra-tips">
-                    <li>Join open-source projects for experience.</li>
-                    <li>Tailor your resume to each job.</li>
-                    <li>Try internships or freelance work.</li>
-                  </ul>
-                </small>
-              )}
-
-              <FaTrashAlt
-                className="back-icon2"
-                onClick={() => handleDelete(index)}
-                aria-label="Delete Application"
-              />
-            </div>
-          );
-        })
-      )}
+    <div className="apply-container">
+      <h2>Apply for {job.position} at {job.company}</h2>
+      <form onSubmit={handleSubmit} className="apply-form">
+        <input
+          type="text"
+          name="firstName"
+          placeholder="First Name"
+          value={formData.firstName}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="lastName"
+          placeholder="Last Name"
+          value={formData.lastName}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="number"
+          name="graduationYear"
+          placeholder="Graduation Year"
+          value={formData.graduationYear}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="number"
+          step="0.1"
+          name="cgpa"
+          placeholder="CGPA"
+          value={formData.cgpa}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="linkedIn"
+          placeholder="LinkedIn Profile URL"
+          value={formData.linkedIn}
+          onChange={handleChange}
+        />
+        <input
+          type="text"
+          name="location"
+          placeholder="Current Location"
+          value={formData.location}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="skills"
+          placeholder="Skills (comma-separated)"
+          value={formData.skills}
+          onChange={handleChange}
+          required
+        />
+        <button type="submit">Submit Application</button>
+      </form>
     </div>
   );
 }
