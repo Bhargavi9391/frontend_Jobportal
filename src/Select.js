@@ -17,7 +17,9 @@ export default function Select() {
     typeof str === "string" ? str.trim().toLowerCase() : "";
 
   const getResultMessage = (application) => {
-    const matchedJob = jobs.find((job) => job.position === application.position);
+    const matchedJob = jobs.find(
+      (job) => normalize(job.position) === normalize(application.position)
+    );
 
     if (!matchedJob) {
       return {
@@ -30,9 +32,11 @@ export default function Select() {
     const reasons = [];
     const suggestions = [];
 
-    // ✅ SKILLS CHECK
+    // ✅ SKILLS CHECK (fix for [object Object])
     const userSkills = (application.skills || [])
-      .map((s) => normalize(s))
+      .map((s) =>
+        typeof s === "string" ? normalize(s) : normalize(s.name)
+      )
       .filter(Boolean);
 
     const requiredSkills = (matchedJob.skills || [])
