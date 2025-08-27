@@ -78,60 +78,60 @@ export default function Apply() {
       alert("Please upload a valid PDF file for the resume.");
     }
   };
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const selectedSkills = skills
+    .filter((skill) => skill.percentage > 0)
+    .map((skill) => skill.name); // ✅ only store names
 
-    const selectedSkills = skills
-      .filter((skill) => skill.percentage > 0)
-      .map((skill) => ({ name: skill.name, level: skill.percentage }));
+  const manualSkillsArray = formData.manualSkills
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
-    const manualSkillsArray = formData.manualSkills
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    const newDetailedApplication = {
-      jobTitle: job.position,
-      company: job.company,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      graduationYear: formData.graduationYear,
-      expectedYear: job.expectedYear || "",
-      education: "M.Tech",
-      requiredEducation: job.education || "",
-      cgpa: formData.cgpa,
-      linkedin: formData.linkedin,
-      location: formData.location,
-      resume: formData.resumeFileName,
-      skills: selectedSkills,   // ✅ store properly for matching
-      manualSkills: manualSkillsArray,
-      requiredSkills: job.skills || [],
-    };
-
-    const simplifiedApplication = {
-      jobId: job.id,
-      position: job.position,
-      company: job.company,
-      appliedAt: new Date().toISOString(),
-    };
-
-    try {
-      const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
-      const updatedApplications = [
-        ...existingApplications,
-        { ...newDetailedApplication, ...simplifiedApplication },
-      ];
-      localStorage.setItem("applications", JSON.stringify(updatedApplications));
-      localStorage.setItem("applicationCount", updatedApplications.length);
-      localStorage.setItem("hasViewedResults", "false");
-      alert("Application submitted successfully!");
-      navigate("/submissions");
-    } catch (err) {
-      alert("Error saving your application. Storage limit might be exceeded.");
-      console.error(err);
-    }
+  const newDetailedApplication = {
+    jobTitle: job.position,
+    company: job.company,
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    graduationYear: formData.graduationYear,
+    expectedYear: job.expectedYear || "",
+    education: "M.Tech",
+    requiredEducation: job.education || "",
+    cgpa: formData.cgpa,
+    linkedin: formData.linkedin,
+    location: formData.location,
+    resume: formData.resumeFileName,
+    skills: [...selectedSkills, ...manualSkillsArray], // ✅ simplified
+    requiredSkills: job.skills || [],
   };
+
+  const simplifiedApplication = {
+    jobId: job.id,
+    position: job.position,
+    company: job.company,
+    appliedAt: new Date().toISOString(),
+  };
+
+  try {
+    const existingApplications =
+      JSON.parse(localStorage.getItem("applications")) || [];
+    const updatedApplications = [
+      ...existingApplications,
+      { ...newDetailedApplication, ...simplifiedApplication },
+    ];
+    localStorage.setItem("applications", JSON.stringify(updatedApplications));
+    localStorage.setItem("applicationCount", updatedApplications.length);
+    localStorage.setItem("hasViewedResults", "false");
+    alert("Application submitted successfully!");
+    navigate("/submissions");
+  } catch (err) {
+    alert("Error saving your application. Storage limit might be exceeded.");
+    console.error(err);
+  }
+};
+
 
   return (
     <div className="apply-container">
