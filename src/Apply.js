@@ -13,50 +13,62 @@ export default function Apply() {
     graduationYear: "",
     cgpa: "",
     linkedIn: "",
+    resume: "",
     location: "",
     skills: "",
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    if (name === "resume") {
+      setFormData({ ...formData, [name]: files[0]?.name || "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ simple logic: check once and decide status
     let status = "Rejected";
+    let reason = "";
 
-    if (
-      formData.graduationYear == job.expectedYear &&
-      parseFloat(formData.cgpa) >= 6.0 && // you can adjust cutoff
-      formData.skills.toLowerCase().includes(job.skills[0].toLowerCase()) &&
-      formData.location.toLowerCase() === job.location.toLowerCase() &&
-      job.education.toLowerCase() === "m.tech"
+    // ✅ Validation checks
+    if (formData.graduationYear != job.expectedYear) {
+      reason = "Graduation year mismatch";
+    } else if (parseFloat(formData.cgpa) < 6.0) {
+      reason = "CGPA below required cutoff";
+    } else if (
+      !formData.skills.toLowerCase().includes(job.skills[0]?.toLowerCase())
     ) {
+      reason = "Required skill not found";
+    } else if (
+      formData.education &&
+      job.education &&
+      formData.education.toLowerCase() !== job.education.toLowerCase()
+    ) {
+      reason = "Education requirement not met";
+    } else if (
+      formData.location.toLowerCase() !== job.location.toLowerCase()
+    ) {
+      reason = "Location mismatch";
+    } else {
       status = "Shortlisted";
     }
 
     const newApplication = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      graduationYear: formData.graduationYear,
-      cgpa: formData.cgpa,
-      linkedIn: formData.linkedIn,
-      location: formData.location,
-      skills: formData.skills.split(",").map((s) => s.trim()),
+      ...formData,
       jobTitle: job.position,
       company: job.company,
       education: job.education,
-      status: status, // ✅ save result
+      status: status,
+      reason: reason,
     };
 
-    const existingApps = JSON.parse(localStorage.getItem("applications")) || [];
-    existingApps.push(newApplication);
-    localStorage.setItem("applications", JSON.stringify(existingApps));
+    const storedApps = JSON.parse(localStorage.getItem("applications")) || [];
+    storedApps.push(newApplication);
+    localStorage.setItem("applications", JSON.stringify(storedApps));
 
-    alert(`Application submitted! Status: ${status}`);
     navigate("/select");
   };
 
@@ -67,7 +79,7 @@ export default function Apply() {
         <input
           type="text"
           name="firstName"
-          placeholder="First Name"
+          placeholder="First Name *"
           value={formData.firstName}
           onChange={handleChange}
           required
@@ -75,7 +87,7 @@ export default function Apply() {
         <input
           type="text"
           name="lastName"
-          placeholder="Last Name"
+          placeholder="Last Name *"
           value={formData.lastName}
           onChange={handleChange}
           required
@@ -83,7 +95,7 @@ export default function Apply() {
         <input
           type="number"
           name="graduationYear"
-          placeholder="Graduation Year"
+          placeholder="Graduation Year *"
           value={formData.graduationYear}
           onChange={handleChange}
           required
@@ -92,22 +104,38 @@ export default function Apply() {
           type="number"
           step="0.1"
           name="cgpa"
-          placeholder="CGPA"
+          placeholder="CGPA *"
           value={formData.cgpa}
           onChange={handleChange}
           required
         />
         <input
           type="text"
+          name="education"
+          placeholder="Education *"
+          value={formData.education}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="url"
           name="linkedIn"
-          placeholder="LinkedIn Profile URL"
+          placeholder="LinkedIn Profile *"
           value={formData.linkedIn}
           onChange={handleChange}
+          required
+        />
+        <input
+          type="file"
+          name="resume"
+          accept="application/pdf"
+          onChange={handleChange}
+          required
         />
         <input
           type="text"
           name="location"
-          placeholder="Current Location"
+          placeholder="Current Location *"
           value={formData.location}
           onChange={handleChange}
           required
@@ -115,13 +143,14 @@ export default function Apply() {
         <input
           type="text"
           name="skills"
-          placeholder="Skills (comma-separated)"
+          placeholder="Enter Skills (comma separated)"
           value={formData.skills}
           onChange={handleChange}
           required
         />
-        <button type="submit">Submit Application</button>
+        <button type="submit">Submit</button>
       </form>
     </div>
   );
 }
+
