@@ -16,20 +16,28 @@ export default function Select() {
     setAdminJobs(storedAdminJobs);
   }, []);
 
-  const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+  useEffect(() => {
+    localStorage.setItem("hasViewedResults", "true");
+  }, []);
 
+  // Function to determine Fit/Unfit based on resume/slider skills only
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(job =>
-      normalize(job.position) === normalize(application.jobTitle) &&
-      normalize(job.company) === normalize(application.company)
+      job.position === application.jobTitle &&
+      job.company === application.company
     );
 
     if (!matchedJob) return { message: "❌ Job not found" };
 
-    const userSkills = (application.skills || []).map(skill => normalize(skill.name));
+    // Normalize function
+    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
+    // Extract only resume/slider skills
+    const resumeSkills = (application.skills || []).map(skill => normalize(skill.name));
+
+    // Compare admin-required skills with resume skills
     const missingSkills = (matchedJob.skills || []).filter(
-      skill => !userSkills.includes(normalize(skill))
+      skill => !resumeSkills.includes(normalize(skill))
     );
 
     if (missingSkills.length === 0) {
@@ -56,14 +64,23 @@ export default function Select() {
         applications.map((app, index) => {
           const result = getResultMessage(app);
           return (
-            <div key={index} className={`result-card ${result.message.includes("Fit") ? "selected" : "unfit"}`}>
+            <div
+              key={index}
+              className={`result-card ${result.message.includes("Fit") ? "selected" : "unfit"}`}
+            >
               <h3>{app.firstName} {app.lastName}</h3>
               <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
               <p><strong>Status:</strong> {result.message}</p>
+
               {result.missingSkills && result.missingSkills.length > 0 && (
                 <p><strong>Missing Skills:</strong> {result.missingSkills.join(", ")}</p>
               )}
-              <FaTrashAlt className="back-icon2" onClick={() => handleDelete(index)} />
+
+              <FaTrashAlt
+                className="back-icon2"
+                onClick={() => handleDelete(index)}
+                aria-label="Delete Application"
+              />
             </div>
           );
         })
