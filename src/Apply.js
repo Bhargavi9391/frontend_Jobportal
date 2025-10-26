@@ -1,41 +1,14 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import "./Apply.css";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function Apply() {
   const location = useLocation();
   const navigate = useNavigate();
   const job = location.state?.job || {};
-
-  const initialSkills = [
-    { name: "HTML", percentage: 0, color: "#ff6f61" },
-    { name: "CSS", percentage: 0, color: "#1dd1a1" },
-    { name: "JavaScript", percentage: 0, color: "#feca57" },
-    { name: "React", percentage: 0, color: "#48dbfb" },
-    { name: "Node.js", percentage: 0, color: "#ffa502" },
-    { name: "Python", percentage: 0, color: "#5f27cd" },
-    { name: "Java", percentage: 0, color: "#d63031" },
-    { name: "C++", percentage: 0, color: "#576574" },
-    { name: "SQL", percentage: 0, color: "#ff9ff3" },
-    { name: "MySQL", percentage: 0, color: "#00d2d3" },
-  ];
-
-  const generateColor = (name) => {
-    const hash = [...name].reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const hue = hash % 360;
-    return `hsl(${hue}, 70%, 60%)`;
-  };
-
-  const requiredSkillNames = job.skills || [];
-
-  const [skills, setSkills] = useState(
-    requiredSkillNames.map((skillName) => {
-      const existing = initialSkills.find((s) => s.name === skillName);
-      return existing
-        ? { ...existing }
-        : { name: skillName, percentage: 0, color: generateColor(skillName) };
-    })
-  );
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -44,53 +17,59 @@ export default function Apply() {
     cgpa: "",
     linkedin: "",
     location: "",
-    resumeFileName: "",
-    manualSkills: "",
+    resumeFile: null, // store file object
+    extractedSkills: [], // skills extracted from PDF
   });
-
-  const handleClick = (index, event) => {
-    const progressBarWidth = event.target.offsetWidth;
-    const clickPosition = event.nativeEvent.offsetX;
-    const newPercentage = Math.round((clickPosition / progressBarWidth) * 100);
-
-    const updatedSkills = [...skills];
-    updatedSkills[index].percentage = newPercentage;
-    setSkills(updatedSkills);
-  };
-
-  if (!job.position || !job.company) {
-    return (
-      <div className="apply-container">
-        <h2>Error: Job details are missing!</h2>
-        <p>Please go back to the job listing and try again.</p>
-      </div>
-    );
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setFormData((prevData) => ({ ...prevData, resumeFileName: file.name }));
-    } else {
-      alert("Please upload a valid PDF file for the resume.");
+    if (!file || file.type !== "application/pdf") {
+      alert("Please upload a valid PDF.");
+      return;
     }
+
+    setFormData(prev => ({ ...prev, resumeFile: file }));
+
+    // Extract text from PDF
+    const fileReader = new FileReader();
+    fileReader.onload = async function () {
+      const typedArray = new Uint8Array(this.result);
+      const pdf = await pdfjsLib.getDocument(typedArray).promise;
+      let textContent = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const text = await page.getTextContent();
+        text.items.forEach(item => textContent += item.str + " ");
+      }
+
+      // Convert text to lowercase and split into words
+      const textWords = textContent.toLowerCase().split(/[\s,]+/);
+
+      // Check which skills from admin job exist in resume
+      const skillsInJob = job.skills || [];
+      const matchedSkills = skillsInJob.filter(skill =>
+        textWords.includes(skill.toLowerCase())
+      );
+
+      setFormData(prev => ({ ...prev, extractedSkills: matchedSkills }));
+    };
+    fileReader.readAsArrayBuffer(file);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const selectedSkills = skills
-      .filter((skill) => skill.percentage > 0)
-      .map((skill) => ({
-        name: skill.name,
-        level: skill.percentage,
-      }));
+    if (!formData.resumeFile) {
+      alert("Please upload your resume.");
+      return;
+    }
 
+    // Save application to localStorage
     const newApplication = {
       jobTitle: job.position,
       company: job.company,
@@ -100,28 +79,20 @@ export default function Apply() {
       cgpa: formData.cgpa,
       linkedin: formData.linkedin,
       location: formData.location,
-      resume: formData.resumeFileName,
-      skills: selectedSkills, // Only resume/slider skills
-      manualSkills: formData.manualSkills, // optional
-      requiredSkills: job.skills || [],
+      resumeFileName: formData.resumeFile.name,
+      skills: formData.extractedSkills, // skills from resume
     };
 
-    try {
-      const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
-      const updatedApplications = [...existingApplications, newApplication];
-      localStorage.setItem("applications", JSON.stringify(updatedApplications));
-      alert("Application submitted successfully!");
-      navigate("/submissions");
-    } catch (err) {
-      alert("Error saving your application. Storage limit might be exceeded.");
-      console.error(err);
-    }
+    const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
+    localStorage.setItem("applications", JSON.stringify([...existingApplications, newApplication]));
+    alert("Application submitted successfully!");
+    navigate("/submissions");
   };
 
   return (
     <div className="apply-container">
       <h2>Apply for {job.position} at {job.company}</h2>
-      <form className="apply-form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="apply-form">
         <label>First Name *</label>
         <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
 
@@ -142,24 +113,6 @@ export default function Apply() {
 
         <label>Current Location *</label>
         <input type="text" name="location" value={formData.location} onChange={handleChange} required />
-
-        <div className="skill-section">
-          <label>Set Your Skill Levels *</label>
-          <div className="container">
-            {skills.map((skill, index) => (
-              <div key={skill.name} className="skill-row">
-                <div className="skill-name">{skill.name}</div>
-                <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
-                  <div
-                    className="progress"
-                    style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }}
-                  />
-                </div>
-                <div className="percentage">{skill.percentage === 0 ? "" : `${skill.percentage}%`}</div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         <button type="submit" className="submit-btn">Submit</button>
       </form>
