@@ -11,7 +11,6 @@ export default function Select() {
   useEffect(() => {
     const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
     const storedAdminJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
-
     setApplications(storedApplications);
     setAdminJobs(storedAdminJobs);
   }, []);
@@ -20,25 +19,43 @@ export default function Select() {
     localStorage.setItem("hasViewedResults", "true");
   }, []);
 
-const getResultMessage = (application) => {
-  const matchedJob = adminJobs.find(job =>
-    job.position === application.jobTitle &&
-    job.company === application.company
-  );
+  const getResultMessage = (application) => {
+    const matchedJob = adminJobs.find(job =>
+      job.position === application.jobTitle &&
+      job.company === application.company
+    );
 
-  if (!matchedJob) return { message: "❌ Job not found" };
+    if (!matchedJob) {
+      return { 
+        message: "❌ Job not found", 
+        extra: "The job you applied for is no longer available or removed by the admin." 
+      };
+    }
 
-  if (!application.skills || application.skills.length === 0) {
-    return { message: "❌ Unfit for this job (No resume or skills detected)" };
-  }
+    if (!application.skills || application.skills.length === 0) {
+      return { 
+        message: "❌ Unfit for this job", 
+        extra: "No resume uploaded or no skills detected. Please upload your resume with relevant skills to be considered." 
+      };
+    }
 
-  const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
-  const resumeSkills = application.skills.map(skill => normalize(skill));
-  const missingSkills = (matchedJob.skills || []).filter(skill => !resumeSkills.includes(normalize(skill)));
+    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+    const resumeSkills = application.skills.map(skill => normalize(skill));
+    const missingSkills = (matchedJob.skills || []).filter(skill => !resumeSkills.includes(normalize(skill)));
 
-  if (missingSkills.length === 0) return { message: "✅ Fit for this job 🎉" };
-  return { message: "❌ Unfit for this job", missingSkills };
-};
+    if (missingSkills.length === 0) {
+      return { 
+        message: "✅ Fit for this job 🎉", 
+        extra: "Congratulations! You match all the required skills. Keep an eye on your email for further updates from the company." 
+      };
+    } else {
+      return { 
+        message: "❌ Unfit for this job", 
+        missingSkills,
+        extra: "Some required skills are missing in your resume. We recommend learning these skills and reapplying in the future." 
+      };
+    }
+  };
 
   const handleDelete = (index) => {
     const updatedApplications = applications.filter((_, i) => i !== index);
@@ -67,6 +84,10 @@ const getResultMessage = (application) => {
 
               {result.missingSkills && result.missingSkills.length > 0 && (
                 <p><strong>Missing Skills:</strong> {result.missingSkills.join(", ")}</p>
+              )}
+
+              {result.extra && (
+                <p className="extra-message">{result.extra}</p>
               )}
 
               <FaTrashAlt
