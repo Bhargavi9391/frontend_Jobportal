@@ -16,46 +16,26 @@ export default function Select() {
     setAdminJobs(storedAdminJobs);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("hasViewedResults", "true");
-  }, []);
+  const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
   const getResultMessage = (application) => {
     const matchedJob = adminJobs.find(job =>
-      job.position === application.jobTitle &&
-      job.company === application.company
+      normalize(job.position) === normalize(application.jobTitle) &&
+      normalize(job.company) === normalize(application.company)
     );
 
     if (!matchedJob) return { message: "❌ Job not found" };
 
-    // Normalize skill names to lowercase for comparison
-    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+    const userSkills = (application.skills || []).map(skill => normalize(skill.name));
 
-    const applicationSkills = application.skills || [];
-    const manualSkills = application.manualSkills || [];
-
-    // Combine slider skills + manual skills from user
-    const userSkills = [
-      ...applicationSkills.map(skill => normalize(skill.name)),
-      ...manualSkills.map(skill => normalize(skill))
-    ];
-
-    // Check missing skills
     const missingSkills = (matchedJob.skills || []).filter(
       skill => !userSkills.includes(normalize(skill))
     );
 
     if (missingSkills.length === 0) {
-      // All required skills are present → Fit
-      return {
-        message: "✅ Fit for this job 🎉"
-      };
+      return { message: "✅ Fit for this job 🎉" };
     } else {
-      // Missing at least one skill → Unfit
-      return {
-        message: "❌ Unfit for this job",
-        missingSkills
-      };
+      return { message: "❌ Unfit for this job", missingSkills };
     }
   };
 
@@ -76,23 +56,14 @@ export default function Select() {
         applications.map((app, index) => {
           const result = getResultMessage(app);
           return (
-            <div
-              key={index}
-              className={`result-card ${result.message.includes("Fit") ? "selected" : "unfit"}`}
-            >
+            <div key={index} className={`result-card ${result.message.includes("Fit") ? "selected" : "unfit"}`}>
               <h3>{app.firstName} {app.lastName}</h3>
               <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
               <p><strong>Status:</strong> {result.message}</p>
-
               {result.missingSkills && result.missingSkills.length > 0 && (
                 <p><strong>Missing Skills:</strong> {result.missingSkills.join(", ")}</p>
               )}
-
-              <FaTrashAlt
-                className="back-icon2"
-                onClick={() => handleDelete(index)}
-                aria-label="Delete Application"
-              />
+              <FaTrashAlt className="back-icon2" onClick={() => handleDelete(index)} />
             </div>
           );
         })
