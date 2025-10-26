@@ -104,27 +104,34 @@ export default function Admin() {
     setEditingIndex(index);
   };
 
-  const handlePostJob = async (job) => {
-    const formattedJob = {
-      ...job,
-      postedTime: new Date().toISOString(),
-      expectedYear: Number(job.expectedYear),
-      vacancies: Number(job.vacancies || 0),
-      skills: Array.isArray(job.skills)
-        ? job.skills
-        : typeof job.skills === "string"
-        ? job.skills.split(",").map(s => s.trim()).filter(Boolean)
-        : [],
-    };
-
-    try {
-      await axios.post("https://jobportal-backend-xoym.onrender.com/jobs", formattedJob);
-      alert("Job posted successfully!");
-    } catch (err) {
-      console.error("Error posting job:", err.response?.data || err.message);
-      alert("Error posting job: " + (err.response?.data?.message || err.message));
-    }
+ // Inside handlePostJob in Admin.js
+const handlePostJob = async (job) => {
+  const formattedJob = {
+    ...job,
+    postedTime: new Date().toISOString(),
+    expectedYear: Number(job.expectedYear),
+    vacancies: Number(job.vacancies || 0),
+    skills: Array.isArray(job.skills)
+      ? job.skills
+      : typeof job.skills === "string"
+      ? job.skills.split(",").map(s => s.trim()).filter(Boolean)
+      : [],
   };
+
+  try {
+    await axios.post("https://jobportal-backend-xoym.onrender.com/jobs", formattedJob);
+    alert("Job posted successfully!");
+
+    // Save to localStorage for Select.js
+    const storedJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+    storedJobs.push(formattedJob);
+    localStorage.setItem("homePostedJobs", JSON.stringify(storedJobs));
+  } catch (err) {
+    console.error("Error posting job:", err.response?.data || err.message);
+    alert("Error posting job: " + (err.response?.data?.message || err.message));
+  }
+};
+
 
   return (
     <div className="admin-container">
