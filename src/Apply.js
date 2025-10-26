@@ -7,7 +7,6 @@ export default function Apply() {
   const navigate = useNavigate();
   const job = location.state?.job || {};
 
-  // Predefined skill colors
   const initialSkills = [
     { name: "HTML", percentage: 0, color: "#ff6f61" },
     { name: "CSS", percentage: 0, color: "#1dd1a1" },
@@ -47,7 +46,6 @@ export default function Apply() {
     location: "",
     resumeFileName: "",
     manualSkills: "",
-    education: "",
   });
 
   const handleClick = (index, event) => {
@@ -83,37 +81,15 @@ export default function Apply() {
     }
   };
 
-  // ✅ Calculate Fit Status & Points
-  const getFitStatus = () => {
-    const userSkills = [
-      ...skills.filter((s) => s.percentage > 0).map((s) => s.name.toLowerCase()),
-      ...formData.manualSkills.split(",").map((s) => s.trim().toLowerCase()),
-    ];
-
-    const requiredSkillsLower = (job.skills || []).map((s) => s.toLowerCase());
-    const matchedSkills = requiredSkillsLower.filter((req) =>
-      userSkills.includes(req)
-    );
-
-    const missingSkills = requiredSkillsLower.filter((req) => !userSkills.includes(req));
-
-    if (missingSkills.length === 0) return { status: "Fit", points: matchedSkills.length, total: requiredSkillsLower.length };
-    else return { status: "Unfit", points: matchedSkills.length, total: requiredSkillsLower.length, missingSkills };
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const selectedSkills = skills
       .filter((skill) => skill.percentage > 0)
-      .map((skill) => ({ name: skill.name, level: skill.percentage }));
-
-    const manualSkillsArray = formData.manualSkills
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    const { status, points, total, missingSkills } = getFitStatus();
+      .map((skill) => ({
+        name: skill.name,
+        level: skill.percentage,
+      }));
 
     const newApplication = {
       jobTitle: job.position,
@@ -121,37 +97,26 @@ export default function Apply() {
       firstName: formData.firstName,
       lastName: formData.lastName,
       graduationYear: formData.graduationYear,
-      education: formData.education || "M.Tech",
       cgpa: formData.cgpa,
       linkedin: formData.linkedin,
       location: formData.location,
       resume: formData.resumeFileName,
-      skills: selectedSkills,
-      manualSkills: manualSkillsArray,
+      skills: selectedSkills, // Only resume/slider skills
+      manualSkills: formData.manualSkills, // optional
       requiredSkills: job.skills || [],
-      fitStatus: status,
-      points,
-      totalPoints: total,
-      missingSkills: missingSkills || [],
-      appliedAt: new Date().toISOString(),
     };
 
     try {
       const existingApplications = JSON.parse(localStorage.getItem("applications")) || [];
       const updatedApplications = [...existingApplications, newApplication];
       localStorage.setItem("applications", JSON.stringify(updatedApplications));
-      localStorage.setItem("applicationCount", updatedApplications.length);
-      localStorage.setItem("hasViewedResults", "false");
-
-      alert(`Application submitted! You are ${status} for this job.`);
+      alert("Application submitted successfully!");
       navigate("/submissions");
     } catch (err) {
       alert("Error saving your application. Storage limit might be exceeded.");
       console.error(err);
     }
   };
-
-  const { status, points, total, missingSkills } = getFitStatus();
 
   return (
     <div className="apply-container">
@@ -178,10 +143,6 @@ export default function Apply() {
         <label>Current Location *</label>
         <input type="text" name="location" value={formData.location} onChange={handleChange} required />
 
-        <label>Education *</label>
-        <input type="text" name="education" value={formData.education} onChange={handleChange} placeholder="e.g. M.Tech" required />
-
-        {/* Skill Sliders */}
         <div className="skill-section">
           <label>Set Your Skill Levels *</label>
           <div className="container">
@@ -189,7 +150,10 @@ export default function Apply() {
               <div key={skill.name} className="skill-row">
                 <div className="skill-name">{skill.name}</div>
                 <div className="progress-bar" onClick={(e) => handleClick(index, e)}>
-                  <div className="progress" style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }} />
+                  <div
+                    className="progress"
+                    style={{ width: `${skill.percentage}%`, backgroundColor: skill.color }}
+                  />
                 </div>
                 <div className="percentage">{skill.percentage === 0 ? "" : `${skill.percentage}%`}</div>
               </div>
@@ -197,26 +161,7 @@ export default function Apply() {
           </div>
         </div>
 
-        {/* Manual Skills */}
-        <label>Enter Your Skills Manually (comma-separated)</label>
-        <input
-          type="text"
-          name="manualSkills"
-          value={formData.manualSkills}
-          onChange={handleChange}
-          placeholder="e.g. HTML, CSS, JavaScript"
-        />
-
-        {/* Fit Status Display */}
-        <div className={`fit-status ${status.toLowerCase()}`}>
-          <h3>Status: {status}</h3>
-          <p>Points: {points} / {total}</p>
-          {status === "Unfit" && missingSkills.length > 0 && (
-            <p>Missing Skills: {missingSkills.join(", ")}</p>
-          )}
-        </div>
-
-        <button type="submit" className="submit-btn">Submit Application</button>
+        <button type="submit" className="submit-btn">Submit</button>
       </form>
     </div>
   );
