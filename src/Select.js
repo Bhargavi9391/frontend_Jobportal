@@ -26,52 +26,35 @@ export default function Select() {
       job.company === application.company
     );
 
-    if (!matchedJob) return { message: "❌ Job not found", reasons: [], suggestions: [] };
+    if (!matchedJob) return { message: "❌ Job not found" };
 
-    const reasons = [];
-    const suggestions = [];
-
-    if (Number(application.cgpa) < Number(matchedJob.cgpa)) {
-      reasons.push(`Your CGPA of ${application.cgpa} is below the required CGPA of ${matchedJob.cgpa}.`);
-      suggestions.push("Consider improving your CGPA through additional courses.");
-    }
-
-    const requiredYear = matchedJob.graduationYear || matchedJob.expectedYear || "Not Provided";
-    if (application.graduationYear !== requiredYear) {
-      reasons.push(`Your graduation year (${application.graduationYear}) doesn't match the required year (${requiredYear}).`);
-      suggestions.push("Apply to roles that match your timeline.");
-    }
-
-    // Fix: safely normalize skill names as strings
+    // Normalize skill names to lowercase for comparison
     const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
 
     const applicationSkills = application.skills || [];
-    // Extract skill names from application skills objects, then normalize
-    const applicationSkillNames = applicationSkills.map(skill => normalize(skill.name));
+    const manualSkills = application.manualSkills || [];
 
-    // Normalize required skills from matchedJob.skills and check missing
-    const missingSkills = matchedJob.skills.filter(skill =>
-      !applicationSkillNames.includes(normalize(skill))
+    // Combine slider skills + manual skills from user
+    const userSkills = [
+      ...applicationSkills.map(skill => normalize(skill.name)),
+      ...manualSkills.map(skill => normalize(skill))
+    ];
+
+    // Check missing skills
+    const missingSkills = (matchedJob.skills || []).filter(
+      skill => !userSkills.includes(normalize(skill))
     );
 
-    if (missingSkills.length > 0) {
-      reasons.push(`Missing required skills: ${missingSkills.join(", ")}`);
-      suggestions.push("Learn these skills via platforms like Udemy, Coursera, etc.");
-    }
-
-    if (reasons.length === 0) {
+    if (missingSkills.length === 0) {
+      // All required skills are present → Fit
       return {
-        message: "✅ You are selected! 🎉",
-        followUp: "Details will be shared soon. Check your email regularly!",
-        reasons: [],
-        suggestions: []
+        message: "✅ Fit for this job 🎉"
       };
     } else {
+      // Missing at least one skill → Unfit
       return {
         message: "❌ Unfit for this job",
-        followUp: "Don’t be discouraged. Improve and try again!",
-        reasons,
-        suggestions
+        missingSkills
       };
     }
   };
@@ -95,48 +78,14 @@ export default function Select() {
           return (
             <div
               key={index}
-              className={`result-card ${result.message.includes("selected") ? "selected" : "unfit"}`}
+              className={`result-card ${result.message.includes("Fit") ? "selected" : "unfit"}`}
             >
               <h3>{app.firstName} {app.lastName}</h3>
               <p><strong>Applied for:</strong> {app.jobTitle} at {app.company}</p>
-              <p><strong>CGPA:</strong> {app.cgpa || "Not Provided"}</p>
-              <p><strong>Graduation Year:</strong> {app.graduationYear || "Not Provided"}</p>
               <p><strong>Status:</strong> {result.message}</p>
-              {result.followUp && (
-                <p className="follow-up">{result.followUp}</p>
-              )}
 
-              {result.reasons.length > 0 && (
-                <>
-                  <p><strong>Reasons:</strong></p>
-                  <ul>
-                    {result.reasons.map((reason, i) => (
-                      <li key={i}>{reason}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {result.suggestions.length > 0 && (
-                <>
-                  <p><strong>Suggestions:</strong></p>
-                  <ul>
-                    {result.suggestions.map((tip, i) => (
-                      <li key={i}>{tip}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              {result.message.includes("Unfit") && (
-                <small>
-                  <p><strong>Extra Tips:</strong></p>
-                  <ul className="extra-tips">
-                    <li>Join open-source projects for experience.</li>
-                    <li>Tailor your resume to each job.</li>
-                    <li>Try internships or freelance work.</li>
-                  </ul>
-                </small>
+              {result.missingSkills && result.missingSkills.length > 0 && (
+                <p><strong>Missing Skills:</strong> {result.missingSkills.join(", ")}</p>
               )}
 
               <FaTrashAlt
