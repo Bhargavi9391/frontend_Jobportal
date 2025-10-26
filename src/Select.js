@@ -20,32 +20,25 @@ export default function Select() {
     localStorage.setItem("hasViewedResults", "true");
   }, []);
 
-  // Function to determine Fit/Unfit based on resume/slider skills only
-  const getResultMessage = (application) => {
-    const matchedJob = adminJobs.find(job =>
-      job.position === application.jobTitle &&
-      job.company === application.company
-    );
+const getResultMessage = (application) => {
+  const matchedJob = adminJobs.find(job =>
+    job.position === application.jobTitle &&
+    job.company === application.company
+  );
 
-    if (!matchedJob) return { message: "❌ Job not found" };
+  if (!matchedJob) return { message: "❌ Job not found" };
 
-    // Normalize function
-    const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+  if (!application.skills || application.skills.length === 0) {
+    return { message: "❌ Unfit for this job (No resume or skills detected)" };
+  }
 
-    // Extract only resume/slider skills
-    const resumeSkills = (application.skills || []).map(skill => normalize(skill.name));
+  const normalize = str => (typeof str === "string" ? str.trim().toLowerCase() : "");
+  const resumeSkills = application.skills.map(skill => normalize(skill));
+  const missingSkills = (matchedJob.skills || []).filter(skill => !resumeSkills.includes(normalize(skill)));
 
-    // Compare admin-required skills with resume skills
-    const missingSkills = (matchedJob.skills || []).filter(
-      skill => !resumeSkills.includes(normalize(skill))
-    );
-
-    if (missingSkills.length === 0) {
-      return { message: "✅ Fit for this job 🎉" };
-    } else {
-      return { message: "❌ Unfit for this job", missingSkills };
-    }
-  };
+  if (missingSkills.length === 0) return { message: "✅ Fit for this job 🎉" };
+  return { message: "❌ Unfit for this job", missingSkills };
+};
 
   const handleDelete = (index) => {
     const updatedApplications = applications.filter((_, i) => i !== index);
