@@ -21,7 +21,8 @@ function Login() {
   const { darkMode, toggleTheme } = useTheme();
   const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
- const API_BASE = "https://jobportal-backend-xoym.onrender.com";
+ const API_BASE = "https://backend-jobportal-xoym.onrender.com";
+
 
 
 
@@ -56,17 +57,17 @@ const validateRegister = async () => {
       password,
     });
 
-    // ✅ Store the newly created user in localStorage if you want a session
+    alert("Registration successful! User saved in MongoDB.");
+
+    // Optional: store session
     localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
 
-    alert("Registration successful! User saved in MongoDB.");
     toggleForm(); // Switch to login form
 
   } catch (err) {
     setError(err.response?.data?.message || "Registration failed.");
   }
 };
-
 
 
   const handleLogin = async () => {
