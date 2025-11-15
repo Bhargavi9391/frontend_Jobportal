@@ -37,21 +37,11 @@ function Login() {
 const validateRegister = async () => {
   setError("");
 
-  if (!name || !email || !password || !confirmPassword) {
-    setError("All fields are required.");
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    setError("Passwords do not match.");
-    return;
-  }
-
   try {
     const res = await axios.post(`${API_BASE}/register`, {
       name,
       email,
-      password
+      password,
     });
 
     alert("Registration successful! Please login.");
