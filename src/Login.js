@@ -39,6 +39,16 @@ function Login() {
 const validateRegister = async () => {
   setError("");
 
+  if (!name || !email || !password || !confirmPassword) {
+    setError("All fields are required.");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+
   try {
     const res = await axios.post(`${API_BASE}/register`, {
       name,
@@ -47,12 +57,16 @@ const validateRegister = async () => {
     });
 
     alert("Registration successful! Please login.");
-    toggleForm();
+
+    // Optional: store the newly created user in localStorage
+    localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
+    toggleForm(); // switch to login form
 
   } catch (err) {
     setError(err.response?.data?.message || "Registration failed.");
   }
 };
+
 
 
   const handleLogin = async () => {
@@ -95,29 +109,34 @@ const validateRegister = async () => {
 };
 
 
-  const handleForgotPassword = () => {
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-    let userIndex = registeredUsers.findIndex((user) => user.email === email);
+  const handleForgotPassword = async () => {
+  setError("");
 
-    if (userIndex === -1) {
-      setError("Email not found. Please register first.");
-      return;
-    }
+  if (!newPassword) {
+    setError("Enter a new password.");
+    return;
+  }
 
-    if (!conditions.every(({ regex }) => regex.test(newPassword))) {
-      setError("New password must meet all requirements.");
-      return;
-    }
+  if (!conditions.every(({ regex }) => regex.test(newPassword))) {
+    setError("New password must meet all requirements.");
+    return;
+  }
 
-    registeredUsers[userIndex].password = newPassword;
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+  try {
+    const res = await axios.post(`${API_BASE}/reset-password`, {
+      email,
+      newPassword
+    });
 
     alert("🙂 Password reset successful! Please login with your new password.");
     setForgotPassword(false);
     setNewPassword("");
-    setError("");
     setIsLogin(true);
-  };
+
+  } catch (err) {
+    setError(err.response?.data?.message || "Password reset failed.");
+  }
+};
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
