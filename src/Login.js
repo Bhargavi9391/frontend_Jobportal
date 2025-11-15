@@ -21,7 +21,8 @@ function Login() {
   const { darkMode, toggleTheme } = useTheme();
   const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
- const API_BASE = "https://backend-jobportal-xoym.onrender.com";
+const API_BASE = "https://backend-jobportal-xoym.onrender.com";
+
 
 
 
@@ -38,8 +39,9 @@ function Login() {
   const adminPassword = "Admin@123";
 
 const validateRegister = async () => {
-  setError("");
+  setError(""); // Clear previous errors
 
+  // ✅ Basic field checks
   if (!name || !email || !password || !confirmPassword) {
     setError("All fields are required.");
     return;
@@ -51,21 +53,25 @@ const validateRegister = async () => {
   }
 
   try {
+    // ✅ Send registration request to backend
     const res = await axios.post(`${API_BASE}/register`, {
       name,
       email,
       password,
     });
 
-    alert("Registration successful! User saved in MongoDB.");
-
-    // Optional: store session
+    // ✅ Optional: store session info in localStorage
     localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
+    localStorage.setItem("isAdmin", res.data.user.isAdmin ? "true" : "false");
+
+    alert("🎉 Registration successful! User saved in MongoDB.");
 
     toggleForm(); // Switch to login form
 
   } catch (err) {
+    // ✅ Show backend error message
     setError(err.response?.data?.message || "Registration failed.");
+    console.error("Registration error:", err.response?.data || err.message);
   }
 };
 
