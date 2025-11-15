@@ -56,11 +56,11 @@ const validateRegister = async () => {
       password,
     });
 
-    alert("Registration successful! Please login.");
-
-    // Optional: store the newly created user in localStorage
+    // ✅ Store the newly created user in localStorage if you want a session
     localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
-    toggleForm(); // switch to login form
+
+    alert("Registration successful! User saved in MongoDB.");
+    toggleForm(); // Switch to login form
 
   } catch (err) {
     setError(err.response?.data?.message || "Registration failed.");
