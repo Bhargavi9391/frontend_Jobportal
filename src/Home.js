@@ -19,6 +19,8 @@ export default function Home() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const navigate = useNavigate();
+  const API_BASE = "https://backend-jobportal.onrender.com";
+
 
   // Load user and localStorage data
   useEffect(() => {
