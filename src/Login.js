@@ -39,81 +39,61 @@ const API_BASE = "https://backend-jobportal-xoym.onrender.com";
   const adminPassword = "Admin@123";
 
 const validateRegister = async () => {
-  setError(""); // Clear previous errors
+    setError("");
 
-  // ✅ Basic field checks
-  if (!name || !email || !password || !confirmPassword) {
-    setError("All fields are required.");
-    return;
-  }
+    if (!name || !email || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
 
-  if (password !== confirmPassword) {
-    setError("Passwords do not match.");
-    return;
-  }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-  try {
-    // ✅ Send registration request to backend
-    const res = await axios.post(`${API_BASE}/register`, {
-      name,
-      email,
-      password,
-    });
+    try {
+      const res = await axios.post(`${API_BASE}/register`, { name, email, password });
+      localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
+      localStorage.setItem("isAdmin", res.data.user.isAdmin ? "true" : "false");
+      alert("🎉 Registration successful!");
+      toggleForm();
+    } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Registration failed.");
+    }
+  };
 
-    // ✅ Optional: store session info in localStorage
-    localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
-    localStorage.setItem("isAdmin", res.data.user.isAdmin ? "true" : "false");
-
-    alert("🎉 Registration successful! User saved in MongoDB.");
-
-    toggleForm(); // Switch to login form
-
-  } catch (err) {
-    // ✅ Show backend error message
-    setError(err.response?.data?.message || "Registration failed.");
-    console.error("Registration error:", err.response?.data || err.message);
-  }
-};
-
-
+  // Login user
   const handleLogin = async () => {
-  setError("");
+    setError("");
 
-  if (!email || !password) {
-    setError("Enter email and password.");
-    return;
-  }
+    if (!email || !password) {
+      setError("Enter email and password.");
+      return;
+    }
 
-  // Admin login (local check)
-  if (email === adminEmail && password === adminPassword) {
-    localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
-    localStorage.setItem("isAdmin", "true");
-    alert("👑 Welcome Admin");
-    navigate("/admin");
-    return;
-  }
+    // Admin login
+    if (email === adminEmail && password === adminPassword) {
+      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
+      localStorage.setItem("isAdmin", "true");
+      alert("👑 Welcome Admin");
+      navigate("/admin");
+      return;
+    }
 
-  // Normal user login using backend
-  try {
-    const res = await axios.post(`${API_BASE}/login`, {
-      email,
-      password
-    });
-
-    const user = res.data.user;
-
-    // Store session
-    localStorage.setItem("authenticatedUser", JSON.stringify(user));
-    localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
-
-    alert("✅ Logged in successfully!");
-
-    navigate("/home");
-
-  } catch (err) {
-    setError(err.response?.data?.message || "Login failed.");
-  }
-};
+    // Normal user login
+    try {
+      const res = await axios.post(`${API_BASE}/login`, { email, password });
+      const user = res.data.user;
+      localStorage.setItem("authenticatedUser", JSON.stringify(user));
+      localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
+      alert("✅ Logged in successfully!");
+      navigate("/home");
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed.");
+    }
+  };
 
 
   const handleForgotPassword = async () => {
