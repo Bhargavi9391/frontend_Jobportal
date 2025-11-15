@@ -34,72 +34,62 @@ function Login() {
   const adminEmail = "admin@gmail.com";
   const adminPassword = "Admin@123";
 
-  const validateRegister = () => {
-    setError("");
+  const validateRegister = async () => {
+  try {
+    const res = await axios.post(`${API_BASE}/register`, {
+      name,
+      email,
+      password
+    });
 
-    if (!email || !name || !password || !confirmPassword) {
-      setError("⚠️ All fields are required!");
-      return;
-    }
+    alert("Registration successful! Please login.");
+    toggleForm();
 
-    let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
+  } catch (err) {
+    setError(err.response?.data?.message || "Registration failed.");
+  }
+};
 
-    const userExists = registeredUsers.some((user) => user.email === email);
-    if (userExists) {
-      setError("🚫 Email is already registered. Please login.");
-      return;
-    }
 
-    if (!email.includes("@")) {
-      setError("🤷‍♂️ Invalid email format!");
-      return;
-    }
+  const handleLogin = async () => {
+  setError("");
 
-    if (!conditions.every(({ regex }) => regex.test(password))) {
-      setError("Password must meet all requirements");
-      return;
-    }
+  if (!email || !password) {
+    setError("Enter email and password.");
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+  // Admin login (local check)
+  if (email === adminEmail && password === adminPassword) {
+    localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
+    localStorage.setItem("isAdmin", "true");
+    alert("👑 Welcome Admin");
+    navigate("/admin");
+    return;
+  }
 
-    registeredUsers.push({ name, email, password });
-    localStorage.setItem("registeredUsers", JSON.stringify(registeredUsers));
+  // Normal user login using backend
+  try {
+    const res = await axios.post(`${API_BASE}/login`, {
+      email,
+      password
+    });
 
-    alert("✅ Registration successful! Please log in.");
-    toggleForm(); // switch to login form after successful registration
-  };
+    const user = res.data.user;
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      setError("Enter email and password.");
-      return;
-    }
-
-    // Admin login
-    if (email === adminEmail && password === adminPassword) {
-      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
-      localStorage.setItem("isAdmin", "true");
-      alert("👑 Welcome Admin");
-      navigate("/admin");
-      return;
-    }
-
-    let users = JSON.parse(localStorage.getItem("registeredUsers")) || [];
-    let user = users.find((u) => u.email === email && u.password === password);
-
-    if (!user) {
-      setError("Invalid credentials.");
-      return;
-    }
-
+    // Store session
     localStorage.setItem("authenticatedUser", JSON.stringify(user));
-    localStorage.setItem("isAdmin", "false");
-    alert("✅ Logged in successfully");
+    localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
+
+    alert("✅ Logged in successfully!");
+
     navigate("/home");
-  };
+
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed.");
+  }
+};
+
 
   const handleForgotPassword = () => {
     let registeredUsers = JSON.parse(localStorage.getItem("registeredUsers")) || [];
