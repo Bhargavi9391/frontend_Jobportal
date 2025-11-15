@@ -17,9 +17,11 @@ export default function Admin() {
     skills: [],
     education: ""
   });
-
+  
   const [submittedData, setSubmittedData] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
+  const API_BASE = "https://backend-jobportal.onrender.com";
+
 
   // Load jobs from IndexedDB
   useEffect(() => {
