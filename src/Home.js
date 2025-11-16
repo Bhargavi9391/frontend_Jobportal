@@ -55,12 +55,11 @@ export default function Home() {
     setHasViewedResults(viewed);
   }, []);
   
-  
-  useEffect(() => {
+useEffect(() => {
   const fetchJobs = async () => {
     try {
-      const response = await axios.get("http://localhost:10000/jobs"); // Update with deployed URL later
-      setPostedJobs(response.data);
+      const response = await axios.get("https://jobportal-backend-xoym.onrender.com/api/jobs");
+      setPostedJobs(response.data.jobs);  // Make sure to use response.data.jobs
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
     }
@@ -71,9 +70,10 @@ export default function Home() {
   const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
   setSavedJobs(storedSavedJobs);
 
-   const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+  const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
   setNotInterestedJobs(storedNotInterested);
 }, []);
+
 
   const handleNavigateToSelect = () => {
     navigate("/select"); // Adjust the path as needed
