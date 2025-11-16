@@ -18,9 +18,10 @@ export default function Admin() {
 
   const [submittedData, setSubmittedData] = useState([]);
   const [editingJobId, setEditingJobId] = useState(null);
+
   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
-  // Load jobs from backend on mount
+  // Load jobs on mount
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -66,6 +67,7 @@ export default function Admin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!jobData.position || !jobData.company) {
       alert("Please fill required fields.");
       return;
@@ -76,22 +78,19 @@ export default function Admin() {
       postedTime: new Date().toISOString(),
       expectedYear: Number(jobData.expectedYear),
       vacancies: Number(jobData.vacancies || 0),
-      skills: Array.isArray(jobData.skills)
-        ? jobData.skills
-        : jobData.skills.split(",").map(s => s.trim())
+      skills: Array.isArray(jobData.skills) ? jobData.skills : jobData.skills.split(",").map(s => s.trim())
     };
 
     try {
       if (editingJobId) {
-        // Update job
         await axios.put(`${API_BASE}/jobs/${editingJobId}`, formattedJob);
         alert("Job updated successfully!");
       } else {
-        // Post new job
         await axios.post(`${API_BASE}/jobs`, formattedJob);
         alert("Job posted successfully!");
       }
 
+      // Clear form
       setJobData({
         position: "",
         company: "",
@@ -105,9 +104,11 @@ export default function Admin() {
         education: ""
       });
       setEditingJobId(null);
+
+      // Fetch all jobs again (so Home page updates automatically)
       fetchJobs();
     } catch (err) {
-      console.error("Error posting/updating job:", err.response?.data || err.message);
+      console.error(err.response?.data || err.message);
       alert(err.response?.data?.message || err.message);
     }
   };
@@ -119,22 +120,22 @@ export default function Admin() {
 
   const handleDelete = async (jobId) => {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
+
     try {
       await axios.delete(`${API_BASE}/jobs/${jobId}`);
       alert("Job deleted successfully!");
       fetchJobs();
     } catch (err) {
-      console.error("Error deleting job:", err.response?.data || err.message);
+      console.error(err.response?.data || err.message);
       alert(err.response?.data?.message || err.message);
     }
   };
 
   return (
     <div className="admin-container">
-      <h2 className="form-title">Job Details Form</h2>
+      <h2 className="form-title">Admin Job Panel</h2>
 
       <form onSubmit={handleSubmit} className="job-form">
-        {/* Position */}
         <div className="form-group">
           <label>Position:</label>
           <select name="position" value={jobData.position} onChange={handleChange} required>
@@ -145,7 +146,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Company */}
         <div className="form-group">
           <label>Company:</label>
           <select name="company" value={jobData.company} onChange={handleChange} required>
@@ -156,7 +156,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Expected Year */}
         <div className="form-group">
           <label>Expected Year of Joining:</label>
           <select name="expectedYear" value={jobData.expectedYear} onChange={handleChange} required>
@@ -167,7 +166,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Work Type */}
         <div className="form-group">
           <label>Work Type:</label>
           <select name="workType" value={jobData.workType} onChange={handleChange} required>
@@ -178,7 +176,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Location */}
         <div className="form-group">
           <label>Location:</label>
           <select name="location" value={jobData.location} onChange={handleChange} required>
@@ -189,7 +186,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Skills */}
         <div className="form-group">
           <label>Skills:</label>
           <select onChange={handleSkillsChange}>
@@ -201,7 +197,6 @@ export default function Admin() {
           <div className="selected-skills">{jobData.skills.join(", ")}</div>
         </div>
 
-        {/* Education */}
         <div className="form-group">
           <label>Education:</label>
           <select name="education" value={jobData.education} onChange={handleChange} required>
@@ -212,7 +207,6 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Salary */}
         <div className="form-group">
           <label>Salary:</label>
           <select name="salary" value={jobData.salary} onChange={handleChange} required>
@@ -223,13 +217,11 @@ export default function Admin() {
           </select>
         </div>
 
-        {/* Description */}
         <div className="form-group">
           <label>Description:</label>
           <textarea name="description" value={jobData.description} onChange={handleChange} required />
         </div>
 
-        {/* Vacancies */}
         <div className="form-group">
           <label>Vacancies:</label>
           <input type="number" name="vacancies" value={jobData.vacancies} onChange={handleChange} required />
@@ -238,7 +230,7 @@ export default function Admin() {
         <button type="submit">{editingJobId ? "Update Job" : "Post Job"}</button>
       </form>
 
-      {/* Job List */}
+      {/* Job List for Admin */}
       <div className="submitted-section">
         {submittedData.length > 0 ? (
           submittedData.map(job => (
