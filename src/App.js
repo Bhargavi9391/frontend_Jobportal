@@ -20,16 +20,21 @@ const router = createHashRouter([
   { path: "/", element: <Icon /> },
   { path: "/login", element: <Login /> },
 
-  { path: "/home", element: <ProtectedRoute><Home /></ProtectedRoute> },
+  // Normal user pages
+  { path: "/home", element: <ProtectedRoute role="user"><Home /></ProtectedRoute> },
+
+  // Admin pages
   { path: "/admin", element: <ProtectedRoute role="admin"><Admin /></ProtectedRoute> },
-  { path: "/companies", element: <ProtectedRoute><Companies /></ProtectedRoute> },
-  { path: "/savedjobs", element: <ProtectedRoute><SavedJobs /></ProtectedRoute> },
-  { path: "/apply", element: <ProtectedRoute><Apply /></ProtectedRoute> },
-  { path: "/submissions", element: <ProtectedRoute><Submissions /></ProtectedRoute> },
-  { path: "/select", element: <ProtectedRoute><Select /></ProtectedRoute> },
-  { path: "/email", element: <ProtectedRoute><Email /></ProtectedRoute> },
-  { path: "/more", element: <ProtectedRoute><More /></ProtectedRoute> },
+
+  { path: "/companies", element: <ProtectedRoute role="user"><Companies /></ProtectedRoute> },
+  { path: "/savedjobs", element: <ProtectedRoute role="user"><SavedJobs /></ProtectedRoute> },
+  { path: "/apply", element: <ProtectedRoute role="user"><Apply /></ProtectedRoute> },
+  { path: "/submissions", element: <ProtectedRoute role="user"><Submissions /></ProtectedRoute> },
+  { path: "/select", element: <ProtectedRoute role="user"><Select /></ProtectedRoute> },
+  { path: "/email", element: <ProtectedRoute role="user"><Email /></ProtectedRoute> },
+  { path: "/more", element: <ProtectedRoute role="user"><More /></ProtectedRoute> },
 ]);
+
 
 
 function App() {
