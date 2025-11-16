@@ -77,33 +77,35 @@ function Login() {
   };
 
   // ================== LOGIN ==================
-  const handleLogin = async () => {
-    setError("");
+  // Example in your Login.js submit function
+const handleLogin = (e) => {
+  e.preventDefault();
 
-    if (!email || !password) {
-      setError("Enter email and password.");
-      return;
-    }
+  // Replace this with your actual login API response
+  const hardcodedAdmin = { email: "admin@gmail.com", role: "admin" };
+  const hardcodedUser = { email: "user@gmail.com", role: "user" };
 
-    try {
-      const res = await axios.post(`${API_BASE}/login`, { email, password });
-      const { token, role } = res.data;
+  let loggedUser = null;
 
-      if (role === "admin") {
-        localStorage.setItem("adminToken", token);
-        localStorage.setItem("adminRole", "admin");
-        alert("👑 Welcome Admin");
-        navigate("/admin");
-      } else {
-        localStorage.setItem("userToken", token);
-        localStorage.setItem("userRole", "user");
-        alert("✅ Login successful!");
-        navigate("/home");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed.");
-    }
-  };
+  if (email === "admin@gmail.com" && password === "admin123") {
+    loggedUser = hardcodedAdmin;
+  } else if (email === "user@gmail.com" && password === "user123") {
+    loggedUser = hardcodedUser;
+  } else {
+    alert("Invalid credentials");
+    return;
+  }
+
+  localStorage.setItem("token", "fakeToken123"); // any token
+  localStorage.setItem("user", JSON.stringify(loggedUser));
+
+  // Redirect based on role
+  if (loggedUser.role === "admin") {
+    navigate("/admin");
+  } else {
+    navigate("/home");
+  }
+};
 
   // ================== PASSWORD RESET ==================
   const handleForgotPassword = async () => {
