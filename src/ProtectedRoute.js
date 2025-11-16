@@ -1,19 +1,12 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({ element, requiresAdmin = false }) {
-  const adminToken = localStorage.getItem("adminToken");
-  const userToken = localStorage.getItem("userToken");
+export default function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token"); // or your auth check
 
-  if (requiresAdmin && !adminToken) {
-    return <Navigate to="/login" />;
+  if (!token) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (!requiresAdmin && !userToken) {
-    return <Navigate to="/login" />;
-  }
-
-  return element;
+  return children;
 }
-
-export default ProtectedRoute;
