@@ -1,3 +1,4 @@
+// src/Home.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
@@ -19,23 +20,40 @@ export default function Home() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const navigate = useNavigate();
-  const API_BASE = "https://backend-jobportal.onrender.com";
+  const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
-
-  // Load user and localStorage data
+  // Validate token and load user on mount
   useEffect(() => {
-    const authenticatedUser = localStorage.getItem("authenticatedUser");
-    if (authenticatedUser) {
-      try {
-        const parsedUser = JSON.parse(authenticatedUser);
-        setUser(parsedUser);
-        setIsAdmin(localStorage.getItem("isAdmin") === "true");
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        setUser(null);
-        navigate("/");
-      }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
     }
+    // set axios header so requests include token
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    // Validate token with /me endpoint
+    axios.get(`${API_BASE}/me`)
+      .then(res => {
+        if (res.data && res.data.authenticated) {
+          setUser(res.data.user || null);
+          const role = res.data.role || localStorage.getItem("role");
+          setIsAdmin(role === "admin");
+          // ensure localStorage role is synced
+          if (role) localStorage.setItem("role", role);
+        } else {
+          // not authenticated
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+          navigate("/login");
+        }
+      })
+      .catch(err => {
+        console.error("Token validation failed:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        navigate("/login");
+      });
 
     const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
     setApplications(storedApplications);
@@ -45,12 +63,14 @@ export default function Home() {
 
     const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
     setNotInterestedJobs(storedNotInterested);
+  }, [navigate]);
 
-    // Fetch jobs from backend
-    axios.get("https://jobportal-backend-xoym.onrender.com/jobs")
+  // Fetch jobs (after token is set)
+  useEffect(() => {
+    axios.get(`${API_BASE}/jobs`)
       .then(res => setJobs(res.data))
       .catch(err => console.error("Error fetching jobs:", err));
-  }, [navigate]);
+  }, []);
 
   // Load application count and results viewed status
   useEffect(() => {
@@ -60,10 +80,8 @@ export default function Home() {
     setHasViewedResults(viewed);
   }, []);
 
-  // Navigation handlers
   const handleNavigateToSelect = () => navigate("/select");
 
-  // Job interaction handlers
   const handleNotInterested = (jobId) => {
     const updated = [...notInterestedJobs, jobId];
     setNotInterestedJobs(updated);
@@ -76,11 +94,8 @@ export default function Home() {
       saved => saved.position === job.position && saved.company === job.company
     );
 
-    if (jobIndex === -1) {
-      updatedSavedJobs.push(job);
-    } else {
-      updatedSavedJobs.splice(jobIndex, 1);
-    }
+    if (jobIndex === -1) updatedSavedJobs.push(job);
+    else updatedSavedJobs.splice(jobIndex, 1);
 
     setSavedJobs(updatedSavedJobs);
     localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
@@ -90,7 +105,6 @@ export default function Home() {
     saved => saved.position === job.position && saved.company === job.company
   );
 
-  // Logout handlers
   const handleLogout = async () => {
     try {
       const response = await axios.get("https://randomuser.me/api/");
@@ -102,10 +116,11 @@ export default function Home() {
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem("authenticatedUser");
-    localStorage.removeItem("isAdmin");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     localStorage.removeItem("savedJobs");
-    navigate("/");
+    setUser(null);
+    navigate("/login");
   };
 
   return (
