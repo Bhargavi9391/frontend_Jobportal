@@ -22,27 +22,22 @@ export default function Home() {
   const navigate = useNavigate();
   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
-  // Validate token and load user on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
     }
-    // set axios header so requests include token
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    // Validate token with /me endpoint
     axios.get(`${API_BASE}/me`)
       .then(res => {
         if (res.data && res.data.authenticated) {
           setUser(res.data.user || null);
           const role = res.data.role || localStorage.getItem("role");
           setIsAdmin(role === "admin");
-          // ensure localStorage role is synced
           if (role) localStorage.setItem("role", role);
         } else {
-          // not authenticated
           localStorage.removeItem("token");
           localStorage.removeItem("role");
           navigate("/login");
@@ -65,14 +60,45 @@ export default function Home() {
     setNotInterestedJobs(storedNotInterested);
   }, [navigate]);
 
-  // Fetch jobs (after token is set)
+  // Fetch jobs (from backend) and also merge local homePostedJobs if any
   useEffect(() => {
+    let cancelled = false;
     axios.get(`${API_BASE}/jobs`)
-      .then(res => setJobs(res.data))
-      .catch(err => console.error("Error fetching jobs:", err));
+      .then(res => {
+        if (cancelled) return;
+        const serverJobs = Array.isArray(res.data) ? res.data : [];
+        // compute isExpired and normalize fields
+        const normalized = serverJobs.map(j => ({
+          ...j,
+          isExpired: j.expiresAt ? (new Date() > new Date(j.expiresAt)) : false
+        }));
+
+        // also merge localStorage homePostedJobs (admin local copies) but avoid duplicates by _id or position+company
+        const localJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+        const combined = [...normalized];
+
+        localJobs.forEach(lj => {
+          const exists = combined.some(sj => (sj._id && sj._id === lj._id) || (sj.position === lj.position && sj.company === lj.company));
+          if (!exists) {
+            // compute isExpired for local jobs too
+            const isExpired = lj.expiresAt ? (new Date() > new Date(lj.expiresAt)) : false;
+            combined.unshift({ ...lj, isExpired });
+          }
+        });
+
+        setJobs(combined);
+      })
+      .catch(err => {
+        console.error("Error fetching jobs:", err);
+        // if network error, try load localStorage fallback
+        const localJobs = JSON.parse(localStorage.getItem("homePostedJobs")) || [];
+        const mapped = localJobs.map(lj => ({ ...lj, isExpired: lj.expiresAt ? (new Date() > new Date(lj.expiresAt)) : false }));
+        setJobs(mapped);
+      });
+
+    return () => { cancelled = true; };
   }, []);
 
-  // Load application count and results viewed status
   useEffect(() => {
     const count = Number(localStorage.getItem("applicationCount")) || 0;
     const viewed = localStorage.getItem("hasViewedResults") === "true";
@@ -123,6 +149,15 @@ export default function Home() {
     navigate("/login");
   };
 
+  const handleApplyClick = (job) => {
+    if (job.isExpired) {
+      alert("This application is no longer available (expired).");
+      return;
+    }
+    // proceed to apply page
+    navigate("/apply", { state: { job } });
+  };
+
   return (
     <div className="home-container">
       <nav className="navbar">
@@ -166,8 +201,8 @@ export default function Home() {
           {jobs
             .filter(job => !notInterestedJobs.includes(job._id))
             .map((job, idx) => (
-              <div key={idx} className="job-card">
-                <p>Posted: {new Date(job.postedTime).toLocaleString()}</p>
+              <div key={job._id || idx} className="job-card">
+                <p>Posted: {job.postedTime ? new Date(job.postedTime).toLocaleString() : "N/A"}</p>
                 <h3>{job.position} at {job.company}</h3>
                 <p><strong>Location:</strong> {job.location}</p>
                 <p><strong>Work Type:</strong> {job.workType}</p>
@@ -186,9 +221,15 @@ export default function Home() {
                   <button className="save-btn" onClick={() => toggleSaveJob(job)}>
                     {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
                   </button>
-                  <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
-                    Apply
+
+                  <button
+                    className="apply-btn"
+                    onClick={() => handleApplyClick(job)}
+                    disabled={job.isExpired}
+                  >
+                    {job.isExpired ? "Application Closed" : "Apply"}
                   </button>
+
                   <button className="not-interested-btn" onClick={() => handleNotInterested(job._id)}>
                     ❌ Not Interested
                   </button>
