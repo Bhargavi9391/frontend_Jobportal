@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children, role }) {
 
   if (role && user.role !== role) {
     // Logged in but wrong role
-    return <Navigate to="/login" replace />; // redirect to login
+    return <Navigate to="/login" replace />;
   }
 
   return children;
