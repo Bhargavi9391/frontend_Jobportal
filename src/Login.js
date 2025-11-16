@@ -53,7 +53,7 @@ function Login() {
       const token = loginRes.data.token;
       const role = loginRes.data.role;
 
-     if(role === "admin") {
+      if(role === "admin") {
         localStorage.setItem("adminToken", token);
         localStorage.setItem("adminRole", "admin");
       } else {
@@ -76,48 +76,33 @@ function Login() {
   };
 
   // ================== LOGIN ==================
- // LOGIN
-const handleLogin = async () => {
-  setError("");
+  const handleLogin = async () => {
+    setError("");
 
-  if (!email || !password) {
-    setError("Enter email and password.");
-    return;
-  }
-
-  try {
-    const res = await axios.post(`${API_BASE}/login`, { email, password });
-    const { token, role } = res.data;
-
-    if (role === "admin") {
-      localStorage.setItem("adminToken", token);
-      localStorage.setItem("adminRole", "admin");
-      alert("👑 Welcome Admin");
-      navigate("/admin");
-    } else {
-      localStorage.setItem("userToken", token);
-      localStorage.setItem("userRole", "user");
-      alert("✅ Login successful!");
-      navigate("/home");
+    if (!email || !password) {
+      setError("Enter email and password.");
+      return;
     }
-  } catch (err) {
-    setError(err.response?.data?.message || "Login failed.");
-  }
-};
 
-// LOGOUT
-export const logout = (role) => {
-  if (role === "admin") {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminRole");
-    alert("Admin logged out!");
-  } else {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userRole");
-    alert("User logged out!");
-  }
-};
+    try {
+      const res = await axios.post(`${API_BASE}/login`, { email, password });
+      const { token, role } = res.data;
 
+      if (role === "admin") {
+        localStorage.setItem("adminToken", token);
+        localStorage.setItem("adminRole", "admin");
+        alert("👑 Welcome Admin");
+        navigate("/admin");
+      } else {
+        localStorage.setItem("userToken", token);
+        localStorage.setItem("userRole", "user");
+        alert("✅ Login successful!");
+        navigate("/home");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed.");
+    }
+  };
 
   // ================== PASSWORD RESET ==================
   const handleForgotPassword = async () => {
@@ -169,13 +154,11 @@ export const logout = (role) => {
 
           <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
 
-          {/* Email */}
           {!forgotPassword && (
             <input type="text" placeholder="📩 Enter your email"
               value={email} onChange={(e) => setEmail(e.target.value)} />
           )}
 
-          {/* ================= RESET PASSWORD ================= */}
           {forgotPassword ? (
             <>
               <div className="password-container">
@@ -213,7 +196,6 @@ export const logout = (role) => {
             </>
           ) : (
             <>
-              {/* ================= PASSWORD INPUT ================= */}
               <div className="password-container">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -239,7 +221,6 @@ export const logout = (role) => {
                 )}
               </div>
 
-              {/* ================= REGISTER FIELDS ================= */}
               {!isLogin && (
                 <>
                   <input type="text" placeholder="👤 Enter your name"
@@ -262,12 +243,10 @@ export const logout = (role) => {
 
               {error && <p style={{ color: "red" }}>{error}</p>}
 
-              {/* LOGIN / REGISTER BUTTON */}
               <button onClick={!isLogin ? validateRegister : handleLogin}>
                 {isLogin ? "Login" : "Register"}
               </button>
 
-              {/* TOGGLE */}
               <p onClick={toggleForm}>
                 {isLogin ? (
                   <>Don't have an account? <span style={{ color: "blue" }}>Register</span></>
@@ -276,7 +255,6 @@ export const logout = (role) => {
                 )}
               </p>
 
-              {/* FORGOT PASSWORD */}
               {isLogin && (
                 <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
                   Forgot Password?
