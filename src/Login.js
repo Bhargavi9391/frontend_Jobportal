@@ -32,42 +32,44 @@ function Login() {
   ];
 
   // ================== REGISTER ==================
-  const validateRegister = async () => {
-    setError("");
+ const validateRegister = async () => {
+  setError("");
 
-    if (!name || !email || !password || !confirmPassword) {
-      setError("All fields are required.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+  if (!name || !email || !password || !confirmPassword) {
+    setError("All fields are required.");
+    return;
+  }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
 
-    try {
-      await axios.post(`${API_BASE}/register`, { name, email, password });
+  try {
+    await axios.post(`${API_BASE}/register`, { name, email, password });
 
-      // Auto-login after registering
-      const loginRes = await axios.post(`${API_BASE}/login`, { email, password });
+    // Auto-login after register
+    const loginRes = await axios.post(`${API_BASE}/login`, { email, password });
 
-      const token = loginRes.data.token;
-      const role = loginRes.data.role;
+    const token = loginRes.data.token;
+    const role = loginRes.data.role;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("authenticatedUser", "true");
-      localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("authenticatedUser", "true");
+    localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
 
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      alert("🎉 Registration successful!");
+    alert("🎉 Registration successful!");
 
-      if (role === "admin") navigate("/admin");
-      else navigate("/home");
-    } catch (err) {
-      setError(err.response?.data?.message || "Registration failed.");
-    }
-  };
+    // NEW USERS ALWAYS GO TO HOME
+    navigate("/home");
+
+  } catch (err) {
+    setError(err.response?.data?.message || "Registration failed.");
+  }
+};
+
 
   // ================== LOGIN ==================
   const handleLogin = async () => {
