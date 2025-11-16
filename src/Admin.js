@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { saveJobsToDB, getJobsFromDB } from "./utils/indexedDB";
 import axios from "axios";
 import "./Admin.css";
 
@@ -8,252 +9,329 @@ export default function Admin() {
     company: "",
     location: "",
     workType: "",
-    expectedYear: "",
-    description: "",
-    vacancies: "",
-    salary: "",
     skills: [],
-    education: ""
+    education: "",
+    description: "",
+    expectedYear: "",
+    vacancies: "",
+    salary: ""
   });
 
-  const [submittedData, setSubmittedData] = useState([]);
-  const [editingJobId, setEditingJobId] = useState(null);
+  const [submittedData, setSubmittedData] = useState(() => {
+    return JSON.parse(localStorage.getItem("submittedJobs")) || [];
+  });
 
-  const API_BASE = "https://jobportal-backend-xoym.onrender.com";
-
-  // Load jobs on mount
   useEffect(() => {
-    fetchJobs();
+    getJobsFromDB().then((data) => {
+      setSubmittedData(data);
+    });
   }, []);
 
-  const fetchJobs = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/jobs`);
-      setSubmittedData(res.data);
-    } catch (err) {
-      console.error("Error fetching jobs:", err);
-      setSubmittedData([]);
+  useEffect(() => {
+    if (submittedData.length > 0) {
+      saveJobsToDB([...submittedData]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("submittedJobs", JSON.stringify(submittedData));
+  }, [submittedData]);
+
+  const [editingIndex, setEditingIndex] = useState(null);
 
   const jobDescriptions = {
-    "Software Engineer": "Designs, develops, and optimizes software applications...",
-    "Frontend Developer": "Builds responsive, dynamic, and user-friendly interfaces...",
-    "Backend Developer": "Handles business logic, databases, and API development...",
-    "Full Stack Developer": "Combines frontend and backend development to create complete web applications...",
-    "DevOps Engineer": "Automates development, testing, and deployment pipelines...",
-    "Data Scientist": "Processes and analyzes large datasets to extract meaningful insights...",
-    "Machine Learning Engineer": "Builds, trains, and deploys machine learning models...",
-    "Cyber Security Analyst": "Protects systems, networks, and data from security threats...",
-    "Cloud Engineer": "Designs and manages cloud-based solutions...",
-    "UI/UX Designer": "Creates visually appealing and user-friendly digital experiences..."
+    "Software Engineer": "Designs, develops, and optimizes software applications. Requires strong programming skills, problem-solving abilities, and knowledge of data structures, algorithms, and software development methodologies.",
+    "Frontend Developer": "Builds responsive, dynamic, and user-friendly interfaces using modern frontend technologies like React, Angular, or Vue. Requires expertise in HTML, CSS, JavaScript, state management (Redux/Zustand), and UI/UX principles.",
+    "Backend Developer": "Handles business logic, databases, and API development. Requires proficiency in server-side technologies like Node.js, Python, or Java, database management (SQL/NoSQL), authentication, and REST/GraphQL APIs.",
+    "Full Stack Developer": "Combines frontend and backend development to create complete web applications. Requires expertise in MERN stack (MongoDB, Express.js, React.js, Node.js) or similar, DevOps basics, cloud deployment, and database management.",
+    "DevOps Engineer": "Automates development, testing, and deployment pipelines. Requires knowledge of CI/CD tools (Jenkins, GitHub Actions), cloud platforms (AWS, Azure, GCP), Kubernetes, Docker, Linux, and scripting languages like Bash or Python.",
+    "Data Scientist": "Processes and analyzes large datasets to extract meaningful insights. Requires proficiency in Python, R, SQL, machine learning algorithms, statistical analysis, data visualization, and tools like TensorFlow and Pandas.",
+    "Machine Learning Engineer": "Builds, trains, and deploys machine learning models for automation and AI applications. Requires expertise in deep learning, natural language processing (NLP), computer vision, and ML frameworks like PyTorch or TensorFlow.",
+    "Cyber Security Analyst": "Protects systems, networks, and data from security threats. Requires skills in ethical hacking, penetration testing, encryption, network security, SIEM tools, and cybersecurity frameworks like NIST and OWASP.",
+    "Cloud Engineer": "Designs and manages cloud-based solutions for scalability and security. Requires expertise in AWS, Azure, or Google Cloud, containerization (Docker, Kubernetes), cloud networking, and infrastructure as code (Terraform).",
+    "UI/UX Designer": "Creates visually appealing and user-friendly digital experiences. Requires skills in wireframing, prototyping, Figma, Adobe XD, usability testing, user research, accessibility, and responsive design principles."
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setJobData(prev => ({
-      ...prev,
+    setJobData((prevData) => ({
+      ...prevData,
       [name]: value,
-      description: name === "position" ? jobDescriptions[value] || prev.description : prev.description
+      description: name === "position" ? jobDescriptions[value] || "" : prevData.description,
     }));
   };
 
   const handleSkillsChange = (e) => {
-    const skill = e.target.value;
-    if (skill && !jobData.skills.includes(skill)) {
-      setJobData(prev => ({ ...prev, skills: [...prev.skills, skill] }));
+    const selectedSkill = e.target.value;
+    if (selectedSkill && !jobData.skills.includes(selectedSkill)) {
+      setJobData((prevData) => ({
+        ...prevData,
+        skills: [...prevData.skills, selectedSkill],
+      }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!jobData.position || !jobData.company) {
-      alert("Please fill required fields.");
+      alert("Please fill in required fields.");
       return;
     }
 
-    const formattedJob = {
+    const jobToPost = {
       ...jobData,
       postedTime: new Date().toISOString(),
-      expectedYear: Number(jobData.expectedYear),
-      vacancies: Number(jobData.vacancies || 0),
-      skills: Array.isArray(jobData.skills) ? jobData.skills : jobData.skills.split(",").map(s => s.trim())
     };
 
     try {
-      if (editingJobId) {
-        await axios.put(`${API_BASE}/jobs/${editingJobId}`, formattedJob);
-        alert("Job updated successfully!");
-      } else {
-        await axios.post(`${API_BASE}/jobs`, formattedJob);
-        alert("Job posted successfully!");
-      }
-
-      // Clear form
-      setJobData({
-        position: "",
-        company: "",
-        location: "",
-        workType: "",
-        expectedYear: "",
-        description: "",
-        vacancies: "",
-        salary: "",
-        skills: [],
-        education: ""
-      });
-      setEditingJobId(null);
-
-      // Fetch all jobs again (so Home page updates automatically)
-      fetchJobs();
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert(err.response?.data?.message || err.message);
+      await axios.post("http://localhost:10000/jobs", jobToPost);
+      alert("✅ Job Posted Successfully!");
+    } catch (error) {
+      alert("❌ Failed to post job. Check console.");
+      console.error("Post error:", error);
     }
-  };
 
-  const handleEdit = (job) => {
-    setJobData({ ...job });
-    setEditingJobId(job._id);
-  };
-
-  const handleDelete = async (jobId) => {
-    if (!window.confirm("Are you sure you want to delete this job?")) return;
-
-    try {
-      await axios.delete(`${API_BASE}/jobs/${jobId}`);
-      alert("Job deleted successfully!");
-      fetchJobs();
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert(err.response?.data?.message || err.message);
+    let updatedData = [...submittedData];
+    if (editingIndex !== null) {
+      updatedData[editingIndex] = { ...jobData };
+    } else {
+      updatedData.push(jobData);
     }
+
+    setSubmittedData(updatedData);
+    setEditingIndex(null);
+    setJobData({
+      position: "",
+      company: "",
+      location: "",
+      workType: "",
+      skills: [],
+      education: "",
+      expectedYear: "",
+      description: "",
+      vacancies: "",
+      salary: "",
+    });
   };
 
+  const handleDelete = async (index) => {
+  const jobToDelete = submittedData[index];
+
+  try {
+    // First delete from backend (if it was posted there)
+    if (jobToDelete._id) {
+      await axios.delete(`http://localhost:10000/jobs/${jobToDelete._id}`);
+    }
+  } catch (error) {
+    console.error("❌ Failed to delete job from backend:", error);
+  }
+
+  // Then delete from local state and storage
+  const updatedJobs = submittedData.filter((_, i) => i !== index);
+  setSubmittedData(updatedJobs);
+  localStorage.setItem("submittedJobs", JSON.stringify(updatedJobs));
+};
+
+  const handleEdit = (index) => {
+    setJobData({ ...submittedData[index] });
+    setEditingIndex(index);
+  };
+  const handlePostJob = async (job) => {
+  try {
+    await axios.post("http://localhost:10000/jobs", {
+      ...job,
+      postedTime: new Date().toISOString()
+    });
+    alert("✅ Job re-posted successfully!");
+  } catch (error) {
+    alert("❌ Failed to re-post job.");
+    console.error("Re-post error:", error);
+  }
+};
+
+ 
   return (
     <div className="admin-container">
-      <h2 className="form-title">Admin Job Panel</h2>
-
+      <h2 className="form-title">Job Details Form</h2>
       <form onSubmit={handleSubmit} className="job-form">
+       
         <div className="form-group">
-          <label>Position:</label>
-          <select name="position" value={jobData.position} onChange={handleChange} required>
+          <label className="form-label">Position:</label>
+          <select name="position" value={jobData.position} onChange={handleChange} className="form-input" required>
             <option value="">Select Position</option>
-            {Object.keys(jobDescriptions).map(pos => (
-              <option key={pos} value={pos}>{pos}</option>
+            {Object.keys(jobDescriptions).map((position) => (
+              <option key={position} value={position}>
+                {position}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="form-group">
-          <label>Company:</label>
-          <select name="company" value={jobData.company} onChange={handleChange} required>
+          <label className="form-label">Company:</label>
+          <select name="company" value={jobData.company} onChange={handleChange} className="form-input" required>
             <option value="">Select Company</option>
-            {["Google","Amazon","Microsoft","Facebook","Apple","Netflix","Tesla","IBM","Adobe","Salesforce"].map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            <option value="Google">Google</option>
+            <option value="Amazon">Amazon</option>
+            <option value="Microsoft">Microsoft</option>
+            <option value="Facebook">Facebook</option>
+            <option value="Apple">Apple</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Tesla">Tesla</option>
+            <option value="IBM">IBM</option>
+            <option value="Adobe">Adobe</option>
+            <option value="Salesforce">Salesforce</option>
           </select>
         </div>
 
         <div className="form-group">
-          <label>Expected Year of Joining:</label>
-          <select name="expectedYear" value={jobData.expectedYear} onChange={handleChange} required>
-            <option value="">Select Year</option>
-            {Array.from({ length: 9 }, (_, i) => 2020 + i).map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+  <label className="form-label">Expected Year of Joining:</label>
+  <select
+    name="expectedYear"
+    value={jobData.expectedYear}
+    onChange={handleChange}
+    className="form-input"
+    required
+  >
+    <option value="">Select Year</option>
+    {/* List of years from 2020 to 2028 */}
+    {Array.from({ length: 9 }, (_, index) => 2020 + index).map((year) => (
+      <option key={year} value={year}>
+        {year}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+      
+        <div className="form-group">
+          <label className="form-label">Work Type:</label>
+          <select name="workType" value={jobData.workType} onChange={handleChange} className="form-input" required>
+          <option value="">Select Work Type</option>
+          <option value="Full-time">Full-time</option>
+          <option value="Internship">Internship</option>
+          <option value="Fresher">Fresher</option>
+          <option value="Remote">Remote</option>
+          <option value="Hybrid">Hybrid</option>
+          <option value="Work from Office">Work from Office</option>
+        </select>
         </div>
 
         <div className="form-group">
-          <label>Work Type:</label>
-          <select name="workType" value={jobData.workType} onChange={handleChange} required>
-            <option value="">Select Work Type</option>
-            {["Full-time","Internship","Fresher","Remote","Hybrid","Work from Office"].map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Location:</label>
-          <select name="location" value={jobData.location} onChange={handleChange} required>
+          <label className="form-label">Location:</label>
+          <select name="location" value={jobData.location} onChange={handleChange} className="form-input" required>
             <option value="">Select Location</option>
-            {["Delhi, Delhi","Pune, Maharashtra","Kolkata, West Bengal","Chandigarh, Punjab","Ahmedabad, Gujarat","Jaipur, Rajasthan","Indore, Madhya Pradesh","Coimbatore, Tamil Nadu","Visakhapatnam, Andhra Pradesh","Lucknow, Uttar Pradesh","Bhubaneswar, Odisha","Thiruvananthapuram, Kerala","Nagpur, Maharashtra","Mysore, Karnataka","Surat, Gujarat"].map(loc => (
-              <option key={loc} value={loc}>{loc}</option>
-            ))}
+            <option value="Delhi, Delhi">Delhi</option>
+              <option value="Pune, Maharashtra">Pune</option>
+              <option value="Kolkata, West Bengal">Kolkata</option>
+              <option value="Chandigarh, Punjab">Chandigarh</option>
+              <option value="Ahmedabad, Gujarat">Ahmedabad</option>
+              <option value="Jaipur, Rajasthan">Jaipur</option>
+              <option value="Indore, Madhya Pradesh">Indore</option>
+              <option value="Coimbatore, Tamil Nadu">Coimbatore</option>
+              <option value="Visakhapatnam, Andhra Pradesh">Visakhapatnam</option>
+              <option value="Lucknow, Uttar Pradesh">Lucknow</option>
+              <option value="Bhubaneswar, Odisha">Bhubaneswar</option>
+              <option value="Thiruvananthapuram, Kerala">Thiruvananthapuram</option>
+              <option value="Nagpur, Maharashtra">Nagpur</option>
+              <option value="Mysore, Karnataka">Mysore</option>
+              <option value="Surat, Gujarat">Surat</option>
+
           </select>
         </div>
 
+
+       
         <div className="form-group">
-          <label>Skills:</label>
-          <select onChange={handleSkillsChange}>
-            <option value="">Select Skill</option>
-            {["React.js","Node.js","MongoDB","Express.js","HTML","CSS","JavaScript","Python","Java","C++"].map(skill => (
+          <label className="form-label">Skills:</label>
+          <select name="skills" onChange={handleSkillsChange} className="form-input">
+            <option value="">Select Skills</option>
+            {["React.js", "Node.js", "MongoDB", "Express.js", "HTML", "CSS", "JavaScript", "Python", "Java", "C++"].map((skill) => (
               <option key={skill} value={skill}>{skill}</option>
             ))}
           </select>
-          <div className="selected-skills">{jobData.skills.join(", ")}</div>
+          <div className="selected-skills">
+            {jobData.skills.map((skill, index) => (
+              <span key={skill} className="skill-tag">
+                {skill}{index < jobData.skills.length - 1 ? ", " : ""}
+              </span>
+            ))}
+          </div>
+
+
         </div>
 
         <div className="form-group">
-          <label>Education:</label>
-          <select name="education" value={jobData.education} onChange={handleChange} required>
+          <label className="form-label">Education:</label>
+          <select name="education" value={jobData.education} onChange={handleChange} className="form-input" required>
             <option value="">Select Education</option>
-            {["B.Tech","M.Tech","BCA","MCA"].map(ed => (
-              <option key={ed} value={ed}>{ed}</option>
-            ))}
+            <option value="B.Tech">B.Tech</option>
+            <option value="M.Tech">M.Tech</option>
+            <option value="BCA">BCA</option>
+            <option value="MCA">MCA</option>
           </select>
         </div>
 
         <div className="form-group">
-          <label>Salary:</label>
-          <select name="salary" value={jobData.salary} onChange={handleChange} required>
-            <option value="">Select Salary</option>
-            {["10,000-50,000","50,000-1,00,000","1,00,000-1,50,000","1,50,000-2,00,000","2,00,000-3,00,000","3,00,000-5,00,000","5,00,000+"].map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
+        <label className="form-label">Salary:</label>
+        <select name="salary" value={jobData.salary} onChange={handleChange} className="form-input" required>
+          <option value="">Select salary</option>
+          <option value="10,000-50,000">10,000 - 50,000</option>
+          <option value="50,000-1,00,000">50,000 - 1,00,000</option>
+          <option value="1,00,000-1,50,000">1,00,000 - 1,50,000</option>
+          <option value="1,50,000-2,00,000">1,50,000 - 2,00,000</option>
+          <option value="2,00,000-3,00,000">2,00,000 - 3,00,000</option>
+          <option value="3,00,000-5,00,000">3,00,000 - 5,00,000</option>
+          <option value="5,00,000+">5,00,000 and above</option>
+        </select>
+      </div>
 
+
+     
         <div className="form-group">
-          <label>Description:</label>
-          <textarea name="description" value={jobData.description} onChange={handleChange} required />
+          <label className="form-label">Description:</label>
+          <textarea name="description" value={jobData.description} onChange={handleChange} className="form-input" required />
         </div>
 
+      
         <div className="form-group">
-          <label>Vacancies:</label>
-          <input type="number" name="vacancies" value={jobData.vacancies} onChange={handleChange} required />
+          <label className="form-label">Vacancies:</label>
+          <input type="number" name="vacancies" value={jobData.vacancies} onChange={handleChange} className="form-input" required />
         </div>
+        <button type="submit" className="submit-btn">
+            {editingIndex !== null ? "Update Job" : "Submit Job"}
+          </button>
 
-        <button type="submit">{editingJobId ? "Update Job" : "Post Job"}</button>
       </form>
 
-      {/* Job List for Admin */}
       <div className="submitted-section">
-        {submittedData.length > 0 ? (
-          submittedData.map(job => (
-            <div key={job._id} className="job-card">
-              <h3>{job.position} at {job.company}</h3>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Work Type:</strong> {job.workType}</p>
-              <p><strong>Skills:</strong> {job.skills.join(", ")}</p>
-              <p><strong>Education:</strong> {job.education}</p>
-              <p><strong>Description:</strong> {job.description}</p>
-              <p><strong>Vacancies:</strong> {job.vacancies}</p>
-              <p><strong>Salary:</strong> {job.salary}</p>
-              <p><strong>Expected Year:</strong> {job.expectedYear}</p>
-              <div className="button-container">
-                <button onClick={() => handleEdit(job)}>Edit</button>
-                <button onClick={() => handleDelete(job._id)}>Delete</button>
+          {submittedData.length > 0 ? (
+            submittedData.map((job, index) => (
+              <div key={index} className="job-card">
+                <h3>{job.position} at {job.company}</h3>
+                <p><strong>Location:</strong> {job.location}</p>
+                <p><strong>Work Type:</strong> {job.workType}</p>
+                <p><strong>Skills:</strong> {job.skills.join(", ")}</p>
+                <p><strong>Education:</strong> {job.education}</p>
+                <p><strong>Description:</strong> {job.description}</p>
+                <p><strong>Vacancies:</strong> {job.vacancies}</p>
+                <p><strong>Salary:</strong> {job.salary}</p>
+                <p><strong>Expected Year of Joining:</strong> {job.expectedYear}</p>
+                <div className="button-container">
+                <button className="edit-button" onClick={() => handleEdit(index)}>Edit</button>
+                <button className="delete-button" onClick={() => handleDelete(index)}>Delete</button>
+                <button onClick={() => handlePostJob(job)} className="post-btn">Post</button>
+
               </div>
-            </div>
-          ))
-        ) : (
-          <p>No jobs posted yet.</p>
-        )}
-      </div>
+
+              </div>
+            ))
+          ) : (
+            <p>No jobs posted yet.</p>
+          )}
+        </div>
+
     </div>
   );
 }
