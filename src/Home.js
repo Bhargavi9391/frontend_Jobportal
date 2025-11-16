@@ -1,6 +1,8 @@
+// src/Home.js
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import axios from "axios";
 import "./Home.css";
 
@@ -10,73 +12,75 @@ export default function Home() {
   const [jobs, setJobs] = useState([]);
   const [savedJobs, setSavedJobs] = useState([]);
   const [notInterestedJobs, setNotInterestedJobs] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [applicationCount, setApplicationCount] = useState(0);
+  const [hasViewedResults, setHasViewedResults] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [randomUser, setRandomUser] = useState(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const navigate = useNavigate();
   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
+  // Validate token and load user on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
     }
+    // set axios header so requests include token
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
+    // Validate token with /me endpoint
     axios.get(`${API_BASE}/me`)
       .then(res => {
-        if (res.data?.authenticated) {
+        if (res.data && res.data.authenticated) {
           setUser(res.data.user || null);
           const role = res.data.role || localStorage.getItem("role");
           setIsAdmin(role === "admin");
+          // ensure localStorage role is synced
           if (role) localStorage.setItem("role", role);
         } else {
-          localStorage.clear();
+          // not authenticated
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
           navigate("/login");
         }
       })
       .catch(err => {
         console.error("Token validation failed:", err);
-        localStorage.clear();
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
         navigate("/login");
       });
 
-    // Load saved/not interested from localStorage
-    setSavedJobs(JSON.parse(localStorage.getItem("savedJobs")) || []);
-    setNotInterestedJobs(JSON.parse(localStorage.getItem("notInterestedJobs")) || []);
+    const storedApplications = JSON.parse(localStorage.getItem("applications")) || [];
+    setApplications(storedApplications);
+
+    const storedSavedJobs = JSON.parse(localStorage.getItem("savedJobs")) || [];
+    setSavedJobs(storedSavedJobs);
+
+    const storedNotInterested = JSON.parse(localStorage.getItem("notInterestedJobs")) || [];
+    setNotInterestedJobs(storedNotInterested);
   }, [navigate]);
 
-  // Fetch jobs from backend
+  // Fetch jobs (after token is set)
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/jobs`);
-        const normalizedJobs = res.data.map(job => ({
-          ...job,
-          skills: Array.isArray(job.skills) ? job.skills : (job.skills ? job.skills.split(",").map(s => s.trim()) : []),
-          isExpired: job.expiresAt ? (new Date() > new Date(job.expiresAt)) : false
-        }));
-        setJobs(normalizedJobs);
-      } catch (err) {
-        console.error("Error fetching jobs:", err);
-        setJobs([]);
-      }
-    };
-    fetchJobs();
+    axios.get(`${API_BASE}/jobs`)
+      .then(res => setJobs(res.data))
+      .catch(err => console.error("Error fetching jobs:", err));
   }, []);
 
-  const toggleSaveJob = (job) => {
-    const jobId = job._id;
-    let updated = [...savedJobs];
-    const index = savedJobs.findIndex(j => j._id === jobId);
-    if (index === -1) updated.push(job);
-    else updated.splice(index, 1);
-    setSavedJobs(updated);
-    localStorage.setItem("savedJobs", JSON.stringify(updated));
-  };
+  // Load application count and results viewed status
+  useEffect(() => {
+    const count = Number(localStorage.getItem("applicationCount")) || 0;
+    const viewed = localStorage.getItem("hasViewedResults") === "true";
+    setApplicationCount(count);
+    setHasViewedResults(viewed);
+  }, []);
 
-  const isJobSaved = (job) => savedJobs.some(j => j._id === job._id);
+  const handleNavigateToSelect = () => navigate("/select");
 
   const handleNotInterested = (jobId) => {
     const updated = [...notInterestedJobs, jobId];
@@ -84,13 +88,22 @@ export default function Home() {
     localStorage.setItem("notInterestedJobs", JSON.stringify(updated));
   };
 
-  const handleApplyClick = (job) => {
-    if (job.isExpired) {
-      alert("This application is no longer available (expired).");
-      return;
-    }
-    navigate("/apply", { state: { job } });
+  const toggleSaveJob = (job) => {
+    let updatedSavedJobs = [...savedJobs];
+    const jobIndex = savedJobs.findIndex(
+      saved => saved.position === job.position && saved.company === job.company
+    );
+
+    if (jobIndex === -1) updatedSavedJobs.push(job);
+    else updatedSavedJobs.splice(jobIndex, 1);
+
+    setSavedJobs(updatedSavedJobs);
+    localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs));
   };
+
+  const isJobSaved = (job) => savedJobs.some(
+    saved => saved.position === job.position && saved.company === job.company
+  );
 
   const handleLogout = async () => {
     try {
@@ -103,7 +116,9 @@ export default function Home() {
   };
 
   const confirmLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("savedJobs");
     setUser(null);
     navigate("/login");
   };
@@ -115,12 +130,30 @@ export default function Home() {
           <h1 className="brand-title">✨Career<span className="highlight">Crafter</span></h1>
         </div>
 
+        <div className="notification">
+          {!hasViewedResults && <p className="application-count">{applicationCount}</p>}
+        </div>
+
         <ul className="nav-links">
           <li onClick={() => navigate("/home")}>Home</li>
           <li onClick={() => navigate("/companies")}>Companies</li>
           <li onClick={() => navigate("/savedjobs")}>Saved Jobs</li>
           <li onClick={() => navigate("/submissions")}>Submissions</li>
-          <li onClick={() => navigate("/select")}>Results</li>
+          <li onClick={handleNavigateToSelect}>Results</li>
+          <li className="more-link" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+            More
+            {showMoreMenu && (
+              <ul className="dropdown-menu">
+                <li onClick={() => navigate("/more")}>Support</li>
+              </ul>
+            )}
+          </li>
+          <div className="email-icon-wrapper">
+            <a href="mailto:owner@gmail.com?subject=Query" target="_blank" rel="noopener noreferrer">
+              <span className="email-icon">📧</span>
+            </a>
+            <div className="tooltip2">If you have any queries, email the admin.</div>
+          </div>
         </ul>
 
         <div className="logout-avatar" onClick={handleLogout}>
@@ -132,13 +165,17 @@ export default function Home() {
         <div className="job-list">
           {jobs
             .filter(job => !notInterestedJobs.includes(job._id))
-            .map(job => (
-              <div key={job._id} className="job-card">
-                <p>Posted: {job.postedTime ? new Date(job.postedTime).toLocaleString() : "N/A"}</p>
+            .map((job, idx) => (
+              <div key={idx} className="job-card">
+                <p>Posted: {new Date(job.postedTime).toLocaleString()}</p>
                 <h3>{job.position} at {job.company}</h3>
                 <p><strong>Location:</strong> {job.location}</p>
                 <p><strong>Work Type:</strong> {job.workType}</p>
-                <p><strong>Skills:</strong> {job.skills.length > 0 ? job.skills.join(", ") : "None"}</p>
+                <p><strong>Skills:</strong>
+                  <ul>
+                    {Array.isArray(job.skills) ? job.skills.map((skill, i) => <li key={i}>{skill}</li>) : <li>None</li>}
+                  </ul>
+                </p>
                 <p><strong>Education:</strong> {job.education}</p>
                 <p><strong>Description:</strong> {job.description}</p>
                 <p><strong>Vacancies:</strong> {job.vacancies}</p>
@@ -146,13 +183,15 @@ export default function Home() {
                 <p><strong>Expected Year:</strong> {job.expectedYear}</p>
 
                 <div className="job-actions">
-                  <button onClick={() => toggleSaveJob(job)}>
+                  <button className="save-btn" onClick={() => toggleSaveJob(job)}>
                     {isJobSaved(job) ? <FaBookmark className="saved" /> : <FaRegBookmark className="not-saved" />}
                   </button>
-                  <button onClick={() => handleApplyClick(job)} disabled={job.isExpired}>
-                    {job.isExpired ? "Application Closed" : "Apply"}
+                  <button className="apply-btn" onClick={() => navigate("/apply", { state: { job } })}>
+                    Apply
                   </button>
-                  <button onClick={() => handleNotInterested(job._id)}>❌ Not Interested</button>
+                  <button className="not-interested-btn" onClick={() => handleNotInterested(job._id)}>
+                    ❌ Not Interested
+                  </button>
                 </div>
               </div>
             ))}
@@ -167,8 +206,8 @@ export default function Home() {
             <h3>Confirm Logout</h3>
             <p><strong>Email:</strong> {user?.email || "N/A"}</p>
             {randomUser && <img src={randomUser.picture.medium} alt="User" />}
-            <button onClick={confirmLogout}>Logout</button>
-            <button onClick={() => setShowLogoutModal(false)}>Cancel</button>
+            <button className="logout-btn" onClick={confirmLogout}>Logout</button>
+            <button className="cancel-btn" onClick={() => setShowLogoutModal(false)}>Cancel</button>
           </div>
         </div>
       )}
