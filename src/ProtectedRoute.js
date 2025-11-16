@@ -2,8 +2,8 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, role }) {
-  const token = localStorage.getItem("token"); // existing auth check
-  const user = JSON.parse(localStorage.getItem("user")); // store user info including role
+  const token = localStorage.getItem("token"); 
+  const user = JSON.parse(localStorage.getItem("user")); 
 
   if (!token) {
     // Not logged in
@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children, role }) {
 
   if (role && (!user || user.role !== role)) {
     // Logged in but role does not match
-    return <Navigate to="/home" replace />; // redirect normal users
+    return <Navigate to="/home" replace />; 
   }
 
   return children;
