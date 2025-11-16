@@ -3,20 +3,20 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ element, requiresAdmin = false }) => {
-  const isLoggedIn = localStorage.getItem("authenticatedUser");
-  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-  // If user is NOT logged in → redirect to login
-  if (!isLoggedIn) {
+  // If NO token → user is not logged in
+  if (!token) {
     return <Navigate to="/login" />;
   }
 
-  // If route REQUIRES admin but the user is NOT admin → redirect to home
-  if (requiresAdmin && !isAdmin) {
+  // If Admin route but role is NOT admin → block
+  if (requiresAdmin && role !== "admin") {
     return <Navigate to="/home" />;
   }
 
-  // Otherwise allow access
+  // All good → allow access
   return element;
 };
 
