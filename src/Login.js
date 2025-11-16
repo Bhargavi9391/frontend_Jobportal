@@ -1,4 +1,4 @@
- // src/Login.js
+// src/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "./ThemeContext";
@@ -32,44 +32,41 @@ function Login() {
   ];
 
   // ================== REGISTER ==================
- const validateRegister = async () => {
-  setError("");
+  const validateRegister = async () => {
+    setError("");
 
-  if (!name || !email || !password || !confirmPassword) {
-    setError("All fields are required.");
-    return;
-  }
-  if (password !== confirmPassword) {
-    setError("Passwords do not match.");
-    return;
-  }
+    if (!name || !email || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-  try {
-    await axios.post(`${API_BASE}/register`, { name, email, password });
+    try {
+      await axios.post(`${API_BASE}/register`, { name, email, password });
 
-    // Auto-login after register
-    const loginRes = await axios.post(`${API_BASE}/login`, { email, password });
+      // Auto-login after register
+      const loginRes = await axios.post(`${API_BASE}/login`, { email, password });
 
-    const token = loginRes.data.token;
-    const role = loginRes.data.role;
+      const token = loginRes.data.token;
+      const role = loginRes.data.role;
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    localStorage.setItem("authenticatedUser", "true");
-    localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify({ email, role }));
 
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    alert("🎉 Registration successful!");
+      alert("🎉 Registration successful!");
 
-    // NEW USERS ALWAYS GO TO HOME
-    navigate("/home");
+      // NEW USERS ALWAYS GO TO HOME
+      navigate("/home");
 
-  } catch (err) {
-    setError(err.response?.data?.message || "Registration failed.");
-  }
-};
-
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed.");
+    }
+  };
 
   // ================== LOGIN ==================
   const handleLogin = async () => {
@@ -87,9 +84,7 @@ function Login() {
       const role = res.data.role;
 
       localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("authenticatedUser", "true");
-      localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
+      localStorage.setItem("user", JSON.stringify({ email, role }));
 
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
@@ -136,7 +131,7 @@ function Login() {
     setForgotPassword(false);
     setError("");
     setEmail("");
-    setPassword("");
+       setPassword("");
     setName("");
     setConfirmPassword("");
     setNewPassword("");
@@ -155,13 +150,11 @@ function Login() {
 
           <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
 
-          {/* Email */}
           {!forgotPassword && (
             <input type="text" placeholder="📩 Enter your email"
               value={email} onChange={(e) => setEmail(e.target.value)} />
           )}
 
-          {/* ================= RESET PASSWORD ================= */}
           {forgotPassword ? (
             <>
               <div className="password-container">
@@ -199,7 +192,6 @@ function Login() {
             </>
           ) : (
             <>
-              {/* ================= PASSWORD INPUT ================= */}
               <div className="password-container">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -225,7 +217,6 @@ function Login() {
                 )}
               </div>
 
-              {/* ================= REGISTER FIELDS ================= */}
               {!isLogin && (
                 <>
                   <input type="text" placeholder="👤 Enter your name"
@@ -248,12 +239,10 @@ function Login() {
 
               {error && <p style={{ color: "red" }}>{error}</p>}
 
-              {/* LOGIN / REGISTER BUTTON */}
               <button onClick={!isLogin ? validateRegister : handleLogin}>
                 {isLogin ? "Login" : "Register"}
               </button>
 
-              {/* TOGGLE */}
               <p onClick={toggleForm}>
                 {isLogin ? (
                   <>Don't have an account? <span style={{ color: "blue" }}>Register</span></>
@@ -262,7 +251,6 @@ function Login() {
                 )}
               </p>
 
-              {/* FORGOT PASSWORD */}
               {isLogin && (
                 <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
                   Forgot Password?
