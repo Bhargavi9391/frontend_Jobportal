@@ -20,16 +20,17 @@ const router = createHashRouter([
   { path: "/", element: <Icon /> },
   { path: "/login", element: <Login /> },
 
-  { path: "/home", element: <ProtectedRoute element={<Home />} /> },
-  { path: "/admin", element: <ProtectedRoute element={<Admin />} requiresAdmin={true} /> },
-  { path: "/companies", element: <ProtectedRoute element={<Companies />} /> },
-  { path: "/savedjobs", element: <ProtectedRoute element={<SavedJobs />} /> },
-  { path: "/apply", element: <ProtectedRoute element={<Apply />} /> },
-  { path: "/submissions", element: <ProtectedRoute element={<Submissions />} /> },
-  { path: "/select", element: <ProtectedRoute element={<Select />} /> },
-  { path: "/email", element: <ProtectedRoute element={<Email />} /> },
-  { path: "/more", element: <ProtectedRoute element={<More />} /> },
+  { path: "/home", element: <ProtectedRoute><Home /></ProtectedRoute> },
+  { path: "/admin", element: <ProtectedRoute role="admin"><Admin /></ProtectedRoute> },
+  { path: "/companies", element: <ProtectedRoute><Companies /></ProtectedRoute> },
+  { path: "/savedjobs", element: <ProtectedRoute><SavedJobs /></ProtectedRoute> },
+  { path: "/apply", element: <ProtectedRoute><Apply /></ProtectedRoute> },
+  { path: "/submissions", element: <ProtectedRoute><Submissions /></ProtectedRoute> },
+  { path: "/select", element: <ProtectedRoute><Select /></ProtectedRoute> },
+  { path: "/email", element: <ProtectedRoute><Email /></ProtectedRoute> },
+  { path: "/more", element: <ProtectedRoute><More /></ProtectedRoute> },
 ]);
+
 
 function App() {
   return (
