@@ -77,12 +77,9 @@ function Login() {
   };
 
   // ================== LOGIN ==================
-  // Example in your Login.js submit function
-// Inside your Login.js submit handler
-const handleLogin = (e) => {
+  const handleLogin = (e) => {
   e.preventDefault();
 
-  // Hardcoded example
   let loggedUser = null;
 
   if (email === "admin@gmail.com" && password === "admin123") {
@@ -94,7 +91,7 @@ const handleLogin = (e) => {
     return;
   }
 
-  localStorage.setItem("token", "fakeToken123");
+  localStorage.setItem("token", "fakeToken123"); // token to indicate login
   localStorage.setItem("user", JSON.stringify(loggedUser));
 
   // Redirect based on role
