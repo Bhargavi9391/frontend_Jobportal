@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, role }) {
   const token = localStorage.getItem("token"); 
-  const user = JSON.parse(localStorage.getItem("user")); // user.role must exist
+  const user = JSON.parse(localStorage.getItem("user"));
 
   if (!token || !user) {
     // Not logged in
@@ -11,8 +11,8 @@ export default function ProtectedRoute({ children, role }) {
   }
 
   if (role && user.role !== role) {
-    // Logged in but role does not match
-    return <Navigate to="/" replace />; // redirect to default page (could be Icon or login)
+    // Logged in but wrong role
+    return <Navigate to="/login" replace />; // redirect to login
   }
 
   return children;
