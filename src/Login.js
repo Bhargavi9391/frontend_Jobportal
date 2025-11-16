@@ -78,33 +78,28 @@ function Login() {
 
   // ================== LOGIN ==================
   // Example in your Login.js submit function
+// Inside your Login.js submit handler
 const handleLogin = (e) => {
   e.preventDefault();
 
-  // Replace this with your actual login API response
-  const hardcodedAdmin = { email: "admin@gmail.com", role: "admin" };
-  const hardcodedUser = { email: "user@gmail.com", role: "user" };
-
+  // Hardcoded example
   let loggedUser = null;
 
   if (email === "admin@gmail.com" && password === "admin123") {
-    loggedUser = hardcodedAdmin;
+    loggedUser = { email, role: "admin" };
   } else if (email === "user@gmail.com" && password === "user123") {
-    loggedUser = hardcodedUser;
+    loggedUser = { email, role: "user" };
   } else {
     alert("Invalid credentials");
     return;
   }
 
-  localStorage.setItem("token", "fakeToken123"); // any token
+  localStorage.setItem("token", "fakeToken123");
   localStorage.setItem("user", JSON.stringify(loggedUser));
 
   // Redirect based on role
-  if (loggedUser.role === "admin") {
-    navigate("/admin");
-  } else {
-    navigate("/home");
-  }
+  if (loggedUser.role === "admin") navigate("/admin");
+  else navigate("/home");
 };
 
   // ================== PASSWORD RESET ==================
