@@ -77,37 +77,47 @@ function Login() {
 
   // ================== LOGIN ==================
   const handleLogin = async () => {
-    setError("");
+  setError("");
 
-    if (!email || !password) {
-      setError("Enter email and password.");
-      return;
+  if (!email || !password) {
+    setError("Enter email and password.");
+    return;
+  }
+
+  try {
+    const res = await axios.post(`${API_BASE}/login`, { email, password });
+
+    const token = res.data.token;
+    const role = res.data.role;
+
+    // Store separately for admin/user
+    if (role === "admin") {
+      localStorage.setItem("adminToken", token);
+      localStorage.setItem("adminRole", "admin");
+    } else {
+      localStorage.setItem("userToken", token);
+      localStorage.setItem("userRole", "user");
     }
 
-    try {
-      const res = await axios.post(`${API_BASE}/login`, { email, password });
+    // Optional flags
+    localStorage.setItem("authenticatedUser", "true");
+    localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
 
-      const token = res.data.token;
-      const role = res.data.role;
+    // Don't set global axios default
+    // axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("authenticatedUser", "true");
-      localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
-
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      if (role === "admin") {
-        alert("👑 Welcome Admin");
-        navigate("/admin");
-      } else {
-        alert("✅ Login successful!");
-        navigate("/home");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed.");
+    if (role === "admin") {
+      alert("👑 Welcome Admin");
+      navigate("/admin");
+    } else {
+      alert("✅ Login successful!");
+      navigate("/home");
     }
-  };
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed.");
+  }
+};
+
 
   // ================== PASSWORD RESET ==================
   const handleForgotPassword = async () => {
