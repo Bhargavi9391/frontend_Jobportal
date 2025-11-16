@@ -6,17 +6,17 @@ const ProtectedRoute = ({ element, requiresAdmin = false }) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  // If NO token → user is not logged in
+  // If no token → user not logged in
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  // If Admin route but role is NOT admin → block
+  // If admin route → check role
   if (requiresAdmin && role !== "admin") {
-    return <Navigate to="/home" />;
+    return <Navigate to="/home" replace />;
   }
 
-  // All good → allow access
+  // Allow access
   return element;
 };
 
