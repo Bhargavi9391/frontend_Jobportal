@@ -1,4 +1,3 @@
-// src/Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "./ThemeContext";
@@ -18,11 +17,11 @@ function Login() {
   const [forgotPassword, setForgotPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { darkMode, toggleTheme } = useTheme();
+  const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
-
   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
-
 
   const conditions = [
     { regex: /[A-Z]/, text: "One uppercase letter" },
@@ -32,99 +31,96 @@ function Login() {
     { regex: /^.{8}$/, text: "Exactly 8 characters" },
   ];
 
-  // ================== REGISTER ==================
-  const validateRegister = async () => {
+  const adminEmail = "admin@gmail.com";
+  const adminPassword = "Admin@123";
+
+const validateRegister = async () => {
     setError("");
 
     if (!name || !email || !password || !confirmPassword) {
       setError("All fields are required.");
       return;
     }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     try {
-      await axios.post(`${API_BASE}/register`, { name, email, password });
-
-      // Auto-login after registering
-      const loginRes = await axios.post(`${API_BASE}/login`, { email, password });
-
-      const token = loginRes.data.token;
-      const role = loginRes.data.role;
-
-      if(role === "admin") {
-        localStorage.setItem("adminToken", token);
-        localStorage.setItem("adminRole", "admin");
-      } else {
-        localStorage.setItem("userToken", token);
-        localStorage.setItem("userRole", "user");
-      }
-
-      localStorage.setItem("authenticatedUser", "true");
-      localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
-
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
+      const res = await axios.post(`${API_BASE}/register`, { name, email, password });
+      localStorage.setItem("authenticatedUser", JSON.stringify(res.data.user));
+      localStorage.setItem("isAdmin", res.data.user.isAdmin ? "true" : "false");
       alert("🎉 Registration successful!");
-
-      if (role === "admin") navigate("/admin");
-      else navigate("/home");
+      toggleForm();
     } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Registration failed.");
     }
   };
 
-  // ================== LOGIN ==================
-  const handleLogin = (e) => {
-  e.preventDefault();
-
-  let loggedUser = null;
-
-  if (email === "admin@gmail.com" && password === "admin123") {
-    loggedUser = { email, role: "admin" };
-  } else if (email === "user@gmail.com" && password === "user123") {
-    loggedUser = { email, role: "user" };
-  } else {
-    alert("Invalid credentials");
-    return;
-  }
-
-  localStorage.setItem("token", "fakeToken123"); // token to indicate login
-  localStorage.setItem("user", JSON.stringify(loggedUser));
-
-  // Redirect based on role
-  if (loggedUser.role === "admin") navigate("/admin");
-  else navigate("/home");
-};
-
-  // ================== PASSWORD RESET ==================
-  const handleForgotPassword = async () => {
+  // Login user
+  const handleLogin = async () => {
     setError("");
 
-    if (!newPassword) {
-      setError("Enter a new password.");
-      return;
-    }
-    if (!conditions.every(({ regex }) => regex.test(newPassword))) {
-      setError("New password must meet all requirements.");
+    if (!email || !password) {
+      setError("Enter email and password.");
       return;
     }
 
+    // Admin login
+    if (email === adminEmail && password === adminPassword) {
+      localStorage.setItem("authenticatedUser", JSON.stringify({ name: "Admin", email }));
+      localStorage.setItem("isAdmin", "true");
+      alert("👑 Welcome Admin");
+      navigate("/admin");
+      return;
+    }
+
+    // Normal user login
     try {
-      await axios.post(`${API_BASE}/reset-password`, { email, newPassword });
-
-      alert("🙂 Password reset successful!");
-      setForgotPassword(false);
-      setNewPassword("");
-      setIsLogin(true);
+      const res = await axios.post(`${API_BASE}/login`, { email, password });
+      const user = res.data.user;
+      localStorage.setItem("authenticatedUser", JSON.stringify(user));
+      localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
+      alert("✅ Logged in successfully!");
+      navigate("/home");
     } catch (err) {
-      setError(err.response?.data?.message || "Password reset failed.");
+      console.error("Login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed.");
     }
   };
 
-  // ================== TOGGLE LOGIN / REGISTER ==================
+
+  const handleForgotPassword = async () => {
+  setError("");
+
+  if (!newPassword) {
+    setError("Enter a new password.");
+    return;
+  }
+
+  if (!conditions.every(({ regex }) => regex.test(newPassword))) {
+    setError("New password must meet all requirements.");
+    return;
+  }
+
+  try {
+    const res = await axios.post(`${API_BASE}/reset-password`, {
+      email,
+      newPassword
+    });
+
+    alert("🙂 Password reset successful! Please login with your new password.");
+    setForgotPassword(false);
+    setNewPassword("");
+    setIsLogin(true);
+
+  } catch (err) {
+    setError(err.response?.data?.message || "Password reset failed.");
+  }
+};
+
   const toggleForm = () => {
     setIsLogin(!isLogin);
     setForgotPassword(false);
@@ -140,127 +136,147 @@ function Login() {
     setShowNewPassword(false);
   };
 
-  return (
-    <div className="page-container">
-      <h1 className="brand-title">✨Career<span className="highlight">Crafter</span></h1>
+  
 
-      <div className="auth-container">
-        <div className={`form-box ${isLogin ? "login" : "register"}`}>
+return (
+  <div className="page-container">
+    <h1 className="brand-title">
+      ✨Career<span className="highlight">Crafter</span>
+    </h1>
+    <div className="auth-container">
+      <div className={`form-box ${isLogin ? "login" : "register"}`}>
+        <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
 
-          <h2>{forgotPassword ? "Reset Password" : isLogin ? "Login" : "Register"}</h2>
+        {!forgotPassword && (
+          <input
+            type="text"
+            placeholder="📩Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        )}
 
-          {!forgotPassword && (
-            <input type="text" placeholder="📩 Enter your email"
-              value={email} onChange={(e) => setEmail(e.target.value)} />
-          )}
+        {forgotPassword ? (
+          <>
+            <div className="password-container">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="🔑Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                onFocus={() => setShowTooltip(true)}
+                onBlur={() => setShowTooltip(false)}
+              />
+              <i
+                className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`}
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              ></i>
 
-          {forgotPassword ? (
-            <>
-              <div className="password-container">
+              {showTooltip && (
+                <div className="tooltip">
+                  {conditions.map(({ regex, text }, index) => (
+                    <p key={index} className={regex.test(newPassword) ? "valid" : "invalid"}>
+                      {regex.test(newPassword) ? "✔" : "✖"} {text}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            <button onClick={handleForgotPassword}>Reset Password</button>
+            <p
+              style={{ color: "black" }}
+              onClick={() => {
+                setForgotPassword(false);
+                setError("");
+                setNewPassword("");
+              }}
+            >
+              Back to <span style={{ color: "blue" }}>Login</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="password-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="🔑Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => !isLogin && setShowTooltip(true)}
+                onBlur={() => setShowTooltip(false)}
+              />
+              <i
+                className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`}
+                onClick={() => setShowPassword(!showPassword)}
+              ></i>
+
+              {!isLogin && showTooltip && (
+                <div className="tooltip">
+                  {conditions.map(({ regex, text }, index) => (
+                    <p key={index} className={regex.test(password) ? "valid" : "invalid"}>
+                      {regex.test(password) ? "✔" : "✖"} {text}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {!isLogin && (
+              <>
                 <input
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder="🔑 Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  onFocus={() => setShowTooltip(true)}
-                  onBlur={() => setShowTooltip(false)}
+                  type="text"
+                  placeholder="👤Enter your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
-                <i
-                  className={`bi ${showNewPassword ? "bi-eye" : "bi-eye-slash"}`}
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                ></i>
+                <div className="password-container">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="🔑Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <i
+                    className={`bi ${showConfirmPassword ? "bi-eye" : "bi-eye-slash"}`}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  ></i>
+                </div>
+              </>
+            )}
 
-                {showTooltip && (
-                  <div className="tooltip">
-                    {conditions.map(({ regex, text }, i) => (
-                      <p key={i} className={regex.test(newPassword) ? "valid" : "invalid"}>
-                        {regex.test(newPassword) ? "✔" : "✖"} {text}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
 
-              {error && <p style={{ color: "red" }}>{error}</p>}
+            <button onClick={!isLogin ? validateRegister : handleLogin}>
+              {isLogin ? "Login" : "Register"}
+            </button>
 
-              <button onClick={handleForgotPassword}>Reset Password</button>
-
-              <p onClick={() => { setForgotPassword(false); setError(""); }}>
-                Back to <span style={{ color: "blue" }}>Login</span>
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="password-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="🔑 Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => !isLogin && setShowTooltip(true)}
-                  onBlur={() => setShowTooltip(false)}
-                />
-                <i
-                  className={`bi ${showPassword ? "bi-eye" : "bi-eye-slash"}`}
-                  onClick={() => setShowPassword(!showPassword)}
-                ></i>
-
-                {!isLogin && showTooltip && (
-                  <div className="tooltip">
-                    {conditions.map(({ regex, text }, i) => (
-                      <p key={i} className={regex.test(password) ? "valid" : "invalid"}>
-                        {regex.test(password) ? "✔" : "✖"} {text}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {!isLogin && (
+            <p onClick={toggleForm}>
+              {isLogin ? (
                 <>
-                  <input type="text" placeholder="👤 Enter your name"
-                    value={name} onChange={(e) => setName(e.target.value)} />
-
-                  <div className="password-container">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="🔑 Confirm Password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                    <i
-                      className={`bi ${showConfirmPassword ? "bi-eye" : "bi-eye-slash"}`}
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    ></i>
-                  </div>
+                  Don't have an account? <span style={{ color: "blue" }}>Register</span>
+                </>
+              ) : (
+                <>
+                  Already have an account? <span style={{ color: "#C71585" }}>Login</span>
                 </>
               )}
+            </p>
 
-              {error && <p style={{ color: "red" }}>{error}</p>}
-
-              <button onClick={!isLogin ? validateRegister : handleLogin}>
-                {isLogin ? "Login" : "Register"}
-              </button>
-
-              <p onClick={toggleForm}>
-                {isLogin ? (
-                  <>Don't have an account? <span style={{ color: "blue" }}>Register</span></>
-                ) : (
-                  <>Already have an account? <span style={{ color: "#C71585" }}>Login</span></>
-                )}
+            {isLogin && (
+              <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
+                Forgot Password?
               </p>
-
-              {isLogin && (
-                <p onClick={() => setForgotPassword(true)} style={{ color: "red" }}>
-                  Forgot Password?
-                </p>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
+
 }
 
-export default Login;
+export default Login; 
