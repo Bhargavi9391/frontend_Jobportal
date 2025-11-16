@@ -76,7 +76,8 @@ function Login() {
   };
 
   // ================== LOGIN ==================
-  const handleLogin = async () => {
+ // LOGIN
+const handleLogin = async () => {
   setError("");
 
   if (!email || !password) {
@@ -86,35 +87,34 @@ function Login() {
 
   try {
     const res = await axios.post(`${API_BASE}/login`, { email, password });
+    const { token, role } = res.data;
 
-    const token = res.data.token;
-    const role = res.data.role;
-
-    // Store separately for admin/user
     if (role === "admin") {
       localStorage.setItem("adminToken", token);
       localStorage.setItem("adminRole", "admin");
-    } else {
-      localStorage.setItem("userToken", token);
-      localStorage.setItem("userRole", "user");
-    }
-
-    // Optional flags
-    localStorage.setItem("authenticatedUser", "true");
-    localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
-
-    // Don't set global axios default
-    // axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    if (role === "admin") {
       alert("👑 Welcome Admin");
       navigate("/admin");
     } else {
+      localStorage.setItem("userToken", token);
+      localStorage.setItem("userRole", "user");
       alert("✅ Login successful!");
       navigate("/home");
     }
   } catch (err) {
     setError(err.response?.data?.message || "Login failed.");
+  }
+};
+
+// LOGOUT
+export const logout = (role) => {
+  if (role === "admin") {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminRole");
+    alert("Admin logged out!");
+  } else {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userRole");
+    alert("User logged out!");
   }
 };
 
