@@ -53,8 +53,14 @@ function Login() {
       const token = loginRes.data.token;
       const role = loginRes.data.role;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
+     if(role === "admin") {
+        localStorage.setItem("adminToken", token);
+        localStorage.setItem("adminRole", "admin");
+      } else {
+        localStorage.setItem("userToken", token);
+        localStorage.setItem("userRole", "user");
+      }
+
       localStorage.setItem("authenticatedUser", "true");
       localStorage.setItem("isAdmin", role === "admin" ? "true" : "false");
 
