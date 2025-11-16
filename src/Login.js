@@ -87,7 +87,6 @@ const validateRegister = async () => {
   }
 };
 
-
   const handleForgotPassword = async () => {
   setError("");
 
