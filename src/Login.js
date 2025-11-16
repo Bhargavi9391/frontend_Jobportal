@@ -23,6 +23,7 @@ function Login() {
 
   const API_BASE = "https://jobportal-backend-xoym.onrender.com";
 
+
   const conditions = [
     { regex: /[A-Z]/, text: "One uppercase letter" },
     { regex: /[a-z]/, text: "One lowercase letter" },
